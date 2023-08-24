@@ -131,9 +131,10 @@ function fireProjectile(type, start, end, activator_ent) {
 
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
         local bounceSurface = Entities.FindByClassnameWithin(null, "trigger_push", end, 2)
+        local physObject = Entities.FindByClassnameWithin(null, "prop_physics", end, 25)
         // DebugDrawBox(end, Vector(2,2,2)*-1,Vector(2,2,2),255,255,255,100,2)
 
-        if(!bounceSurface || RandomInt(1,4) == 4)
+        if(bounceSurface || physObject)// || RandomInt(1,4) == 4)
             break 
 
         local trace = bboxcast(start, end, [GetPlayer(), caller])
