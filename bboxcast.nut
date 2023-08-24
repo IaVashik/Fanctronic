@@ -70,12 +70,12 @@ class bboxcast {
 
     // Get the entity that was hit by the ray
     function GetEntity() {
-        return hitent
+        return this.hitent
     }
 
-        function GetIngoreEntities() {
-            return ignoreEnt
-        }
+    function GetIngoreEntities() {
+        return ignoreEnt
+    }
 
     // Check if the ray hit any object or entity
     function DidHit() {

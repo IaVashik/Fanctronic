@@ -16,6 +16,6 @@ function SmoothAlphaTransition(ent, start, end, time, globalDelay = 0) {
     for (local i = 0; i < transitionFrames; i++) {
         local delay = FrameTime() * i + globalDelay;
         local newAlpha = start + alphaStep * (i + 1);
-        EntFireByHandle(ent, "alpha", newAlpha, delay, null, null)
+        EntFire(ent, "alpha", newAlpha.tostring(), delay)
     }
-},
+}

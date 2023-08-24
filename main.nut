@@ -2,11 +2,12 @@ IncludeScript("Fanctronic/bboxcast")
 IncludeScript("Fanctronic/utils")
 IncludeScript("Fanctronic/projectile")
 IncludeScript("Fanctronic/instances")
+// IncludeScript("Fanctronic/hud")
 
 
 
 const maxDistance = 3000
-const projectileSpeed = 12 // units per frame
+const projectileSpeed = 13 // units per frame
 const recursionDepth = 5
 
 CurrentMode <- null
@@ -21,7 +22,7 @@ function fireProjectileByPlayer() {
     local trace = bboxcast.TracePlayerEyes(maxDistance)
     local start = trace.GetStartPos() 
     local hit = trace.GetHitpos()
-    fireProjectile(CurrentMode, start, hit)
+    fireProjectile(CurrentMode, start, hit, GetPlayer())
 }
 
 
