@@ -1,182 +1,122 @@
-projectileInfo <- [
-    {projectileEnt = EntityGroup[0], color = "138 206 247", available = false},
-    {projectileEnt = EntityGroup[1], color = "200 100 200", available = false},
-    {projectileEnt = EntityGroup[2], color = "255 200 0", available = false},
-]
+class vecProjectile {
+    projectileEnt = null;   // черт, а их ведь теперь надо динамически создавать, нужен спавнер!
+    type = null;
+    color = null;
+    handleHitFunc = null;
 
-projectileInfo[0]["handle"] <- function(cargo, deactivateCargo) {
-    if(cargo.GetHealth() == 1) {
-        Entities.FindByName(null, "@gray-vecbox").SetOrigin(cargo.GetOrigin())
-        EntFire("@gray-vecbox", "Stop")
-        EntFire("@gray-vecbox", "Start", "", FrameTime())
-        return deactivateCargo(cargo)
+    constructor(projectileEnt, color, type = "unknown", handleFunc = null) {
+        this.projectileEnt = projectileEnt
+        this.color = color
+        this.type = type
+        this.handleHitFunc = handleFunc
+
+        // add change color point
     }
 
-    if(cargo.GetHealth() == 2) {
-        local cloned_cargo_name = "cloned_cube_" + cargo.entindex()
-        Entities.FindByName(null, cloned_cargo_name).Destroy()
-    }
+    function addHandleFunc(func) null
+    function SetStatus(bool) null
 
-    local ingravity_cargo = Entities.FindByName(null, "@ingravity-cube")
+    function GetStatus() bool
 
-    ingravity_cargo.SetOrigin(cargo.GetOrigin())
-    local angle = cargo.GetAngles()
-    ingravity_cargo.SetAngles(angle.x, angle.y, angle.z)
-    ingravity_cargo.__KeyValueFromString("targetname", cargo.GetName())
+    function GetType() string
+    function GetColor() string
     
-    cargo.Destroy()
+    function Shoot(startPos, endPos, caller = GetPlayer()) null
 
-    EntFire("@spawn-ingravity-cube", "forcespawn")
-    ingravity_cargo.SetHealth(1)
-
-    Entities.FindByName(null, "@blue-vecbox").SetOrigin(ingravity_cargo.GetOrigin())
-    EntFire("@blue-vecbox", "Stop")
-    EntFire("@blue-vecbox", "Start", "", FrameTime())
+    function __createProjectile() null
 }
 
 
-projectileInfo[1]["handle"] <- function(cargo, deactivateCargo) {
-    local cloned_cargo_name = "cloned_cube_" + cargo.entindex()
-
-    if(cargo.GetHealth() == 2) {
-        Entities.FindByName(null, cloned_cargo_name).Destroy()
-    }
-    else if(cargo.GetHealth() != 0) {
-        cargo = deactivateCargo(cargo)
-        cloned_cargo_name = "cloned_cube_" + cargo.entindex()
-    }
-
-    local clone_cargo = Entities.FindByName(null, "@clone-cube")
-    
-
-    clone_cargo.SetOrigin(cargo.GetOrigin())
-    local angle = cargo.GetAngles()
-    clone_cargo.SetAngles(angle.x, angle.y, angle.z)
-    clone_cargo.__KeyValueFromString("targetname", cloned_cargo_name)
-    EntFireByHandle(clone_cargo, "DisableCollision", "", 0, null, null)
-
-    EntFire("@spawn-clone-cube", "forcespawn")
-    cargo.SetHealth(2)
-
-    Entities.FindByName(null, "@purple-vecbox").SetOrigin(cargo.GetOrigin())
-    EntFire("@purple-vecbox", "Stop")
-    EntFire("@purple-vecbox", "Start", "", FrameTime())
-}  
-
-projectileInfo[2]["handle"] <- function(cargo, deactivateCargo) {
-    if(cargo.GetHealth() == 2) {
-        local cloned_cargo_name = "cloned_cube_" + cargo.entindex()
-        Entities.FindByName(null, cloned_cargo_name).Destroy()
-    }
-
-    EntFireByHandle(cargo, "Color", "255 200 0", 0, null, null)
-    local dissolver = Entities.FindByName(null, "@dissolver")
-    if(cargo.GetName() == "")
-        cargo.__KeyValueFromString("targetname", "dissolved-"+rand())
-    dissolver.__KeyValueFromString("target", cargo.GetName())
-    cargo.SetHealth(1000)
-    EntFire("@dissolver", "dissolve")
-
-    Entities.FindByName(null, "@yellow-vecbox").SetOrigin(cargo.GetOrigin())
-    EntFire("@yellow-vecbox", "Stop")
-    EntFire("@yellow-vecbox", "Start", "", FrameTime())
-}  
-
-
-function deactivateCargo(cargo) {
-    local default_cargo = Entities.FindByName(null, "@default-cube")
-
-    default_cargo.SetOrigin(cargo.GetOrigin())
-    local angle = cargo.GetAngles()
-    default_cargo.SetAngles(angle.x, angle.y, angle.z)
-    default_cargo.__KeyValueFromString("targetname", cargo.GetName())
-
-    if(cargo.GetHealth() == 2) {
-        local cloned_cargo_name = "cloned_cube_" + cargo.entindex()
-        Entities.FindByName(null, cloned_cargo_name).Destroy()
-    }
-    cargo.Destroy()
-    EntFire("@spawn-default-cube", "forcespawn")
-    EntFireByHandle(default_cargo, "wake", "", 0, null, null)
-
-    return default_cargo
+function vecProjectile::addHandleFunc(func) {
+    this.handleHitFunc = func
 }
 
+function vecProjectile::GetType() {
+    return this.type
+}
 
-function fireProjectile(type, start, end, activator_ent) {
-    if(isCannonActive)
-        return printl("Fanctronic: Projectile is already running :O")
+function vecProjectile::GetColor() {
+    return this.color
+}
 
-    activator_ent.EmitSound("VecLauncher.Fire")
-    local animateProjectile = function(start, end, delay = 0) {
-        local distance = end - start
-        local dir = end - start
-        dir.Norm()
-        
-        local steps = abs(distance.Length() / projectileSpeed)
-        for (local tick = 0; tick < steps; tick++) {
-            local newPosition = start + (dir * projectileSpeed * tick)
-            local elapsed = (FrameTime() * tick) + delay
-            local act = "currentProjectile.SetAbsOrigin( Vector(" + newPosition.x + ", " + newPosition.y + ", " + newPosition.z + ") )"
-            EntFireByHandle(self, "runscriptcode", act, elapsed, null, null)
-        }
+function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
+    local eventName = UniqueString("activeProjectile")
+    local particleEnt = this.__createProjectile()
 
-        return FrameTime() * steps
-    }
+    local projectile = launchedProjectile(particleEnt, eventName, name)
+    local animationDuration = 0 
 
-    currentProjectile = projectileInfo[type - 1]["projectileEnt"]
-    local animationDuration = 0
-
-    animationDuration += animateProjectile(start, end)
-
+    // todo comment -----
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
-        local bounceSurface = Entities.FindByClassnameWithin(null, "trigger_push", end, 2)
-        local physObject = Entities.FindByClassnameWithin(null, "prop_physics", end, 25)
-        // DebugDrawBox(end, Vector(2,2,2)*-1,Vector(2,2,2),255,255,255,100,2)
+        animationDuration += projectile.moveBetween(startPos, endPos, animationDuration)
 
-        if(bounceSurface || physObject)// || RandomInt(1,4) == 4)
+        local bounceSurface = entLib.FindByClassnameWithin("trigger_push", endPos, 2)
+        local physObject = entLib.FindByClassnameWithin("prop_physics", endPos, 25) //* как варик юзать и для hitFunc
+
+        if(bounceSurface || physObject)
             break 
 
-        local trace = bboxcast(start, end, [GetPlayer(), caller])
-        local dirReflection = Reflect(trace.GetDir(), trace.GetImpactNormal())
+        local trace = bboxcast(startPos, endPos, caller)
+        local dirReflection = Reflect(trace.GetDir(), trace.GetImpactNormal()) // todo есть в либе???
 
-        local new_end = end + dirReflection * maxDistance
-        start = trace.GetHitpos() + dirReflection * 0.1
-        end = bboxcast(start, new_end).GetHitpos()
+        local newEnd = end + dirReflection * maxDistance
 
-        EntFireByHandle(self, "runscriptcode", "currentProjectile.EmitSound(\"ParticleBall.Impact\")", animationDuration, null, null)
-        animationDuration += animateProjectile(start, end, animationDuration)
+        startPos = trace.GetHitpos() + dirReflection * 0.1
+        endPos = bboxcast(startPos, newEnd).GetHitpos()
+
+        CreateScheduleEvent(eventName, function():(projectileEnt) {
+            projectileEnt.EmitSound("ParticleBall.Impact")
+        }, animationDuration)
     }
 
-    EntFireByHandle(currentProjectile, "Start", "", 0, null, null)
-    isCannonActive = true
-    EntFireByHandle(currentProjectile, "Stop", "", animationDuration, null, null)
-    EntFireByHandle(self, "runscriptcode", "handleProjectileImpact("+type+")", animationDuration, null, null)
+    caller.EmitSound("VecLauncher.Fire")
+    projectile.timeLife = animationDuration
+
+    EntFireByHandle(this.projectileEnt, "Start")
+    EntFireByHandle(this.projectileEnt, "Stop", "", animationDuration)
+    EntFireByHandle(this.projectileEnt, "kill", "", animationDuration + 1)
+
+    local hitFunc = function() : (endPos, handleHitFunc) {        
+        local cargo = entLib.FindByModelWithin("models/props/puzzlebox.mdl", endPos, 25)
+        if(!cargo) return
+
+        handleHitFunc(cargo)
+        cargo.EmitSound("VecBox.Activate")
+    }
+    CreateScheduleEvent(eventName, hitFunc, animationDuration)
+
+    return projectile
 }
 
 
-function handleProjectileImpact(type) {
-    isCannonActive = false
-    
-    local cargo = Entities.FindByClassnameWithin(null, "prop_physics", currentProjectile.GetOrigin(), 35)
-    if(!cargo || cargo.GetModelName() != "models/props/puzzlebox.mdl" || cargo.GetHealth() == 1000)
-        return printl("Fanctronic: No cargo :<")
 
-    cargo.EmitSound("VecBox.Activate")
-    projectileInfo[type - 1]["handle"](cargo, deactivateCargo)
+class launchedProjectile {
+    particleEnt = null;
+    eventName = null;
+    timeLife = 0;
+    type = null;
+
+    constructor(particleEnt, eventName, type) {
+        this.particleEnt = particleEnt
+        this.eventName = eventName
+        this.type = type
+    }
+
+    function Destroy() {
+        cancelScheduledEvent(eventName)
+        particleEnt.Destroy()
+    }
+
+    function isValid() {
+        return eventIsValid(eventName)
+    }
+
+    function moveBetween(startPos, endPos, delay = 0) {
+        return animate.PositionTransitionBySpeed(this.particleEnt, startPos, endPos, 
+            projectileSpeed, eventName, delay = 0)
+    }
+
+    function GetType() {
+        return this.type
+    }
 }
-
-
-foreach(info in projectileInfo){
-    local targetname = info.projectileEnt.GetName() + "-color"
-    Entities.FindByName(null, targetname).SetOrigin(StrToVec(info.color))
-}
-
-
-function Precache() {
-    self.PrecacheSoundScript("VecLauncher.Fire")
-    self.PrecacheSoundScript("VecBox.Activate")
-    self.PrecacheSoundScript("ParticleBall.Impact")
-    // self.PrecacheSoundScript("ParticleBall.AmbientLoop")
-}
-Precache()
