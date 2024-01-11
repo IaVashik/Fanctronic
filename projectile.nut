@@ -1,25 +1,28 @@
 class vecProjectile {
-    projectileEnt = null;   // черт, а их ведь теперь надо динамически создавать, нужен спавнер!
+    particleMaker = null;   // черт, а их ведь теперь надо динамически создавать, нужен спавнер!
     type = null;
     color = null;
     handleHitFunc = null;
+    dispancersList = null;
 
-    constructor(projectileEnt, color, type = "unknown", handleFunc = null) {
-        this.projectileEnt = projectileEnt
+    constructor(type, color, handleFunc = null) {
         this.color = color
         this.type = type
         this.handleHitFunc = handleFunc
 
-        // add change color point
+        this.particleMaker = entLib.FindByName("@" + type + "-projectile-spawn")
+        this.dispancersList = arrayLib.new()
+
+        entLib.FindByName("@" + type + "-colorPoint").SetOrigin(StrToVec(color))
     }
 
     function addHandleFunc(func) null
-    function SetStatus(bool) null
 
     function GetStatus() bool
-
     function GetType() string
     function GetColor() string
+    function GetDispancers() arrayLib
+    function appendDispancer(ent) null
     
     function Shoot(startPos, endPos, caller = GetPlayer()) null
 
@@ -39,11 +42,19 @@ function vecProjectile::GetColor() {
     return this.color
 }
 
+function vecProjectile::appendDispancer(ent) {
+    this.dispancersList.append(ent)
+}
+
+function vecProjectile::GetDispancers() {
+    return this.dispancersList
+}
+
 function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
     local eventName = UniqueString("activeProjectile")
     local particleEnt = this.__createProjectile()
 
-    local projectile = launchedProjectile(particleEnt, eventName, name)
+    local projectile = launchedProjectile(particleEnt, eventName, this.type)
     local animationDuration = 0 
 
     // todo comment -----
@@ -80,7 +91,7 @@ function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
         local cargo = entLib.FindByModelWithin("models/props/puzzlebox.mdl", endPos, 25)
         if(!cargo) return
 
-        handleHitFunc(cargo)
+        this.handleHitFunc(cargo)
         cargo.EmitSound("VecBox.Activate")
     }
     CreateScheduleEvent(eventName, hitFunc, animationDuration)
@@ -89,22 +100,33 @@ function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
 }
 
 
+::projectileCount <- []
 
 class launchedProjectile {
     particleEnt = null;
     eventName = null;
-    timeLife = 0;
     type = null;
+    timeLife = 0;
+
+    __countIndex = 0;
 
     constructor(particleEnt, eventName, type) {
         this.particleEnt = particleEnt
         this.eventName = eventName
         this.type = type
+
+        // An optional functionality, created purely for the sake of optimization
+        if(::projectileCount.len() > maxProjectilesOnMap) {
+            ::projectileCount[0].Destroy()
+        }
+        this.__countIndex = ::projectileCount.len()
+        ::projectileCount.append(this)
     }
 
     function Destroy() {
         cancelScheduledEvent(eventName)
         particleEnt.Destroy()
+        ::projectileCount.remove(this.__countIndex)
     }
 
     function isValid() {
