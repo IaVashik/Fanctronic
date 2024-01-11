@@ -5,14 +5,13 @@
 |     One-of-a-Kind - laVashik :D                                                   |
  +---------------------------------------------------------------------------------+
 | pcapture-lib.nut                                                                  |
-|       The main file in the library. It currently contains various rubbish         |
-|       that will need to be broken down into files in the future                   |
+|       The main file in the library. Initializes required parts of the library     |
+|                                                                                   |
 +----------------------------------------------------------------------------------+ */
 
 if (!("self" in this)) {
     self <- Entities.FindByClassname(null, "worldspawn")
-}
-else {
+} else {
     getroottable()["self"] <- self
 }
 
@@ -504,11 +503,15 @@ math <- {
         return math.Quaternion.new(angle).unrotate(vector)
     },
 
-    RandomVector = function(min, max) {
+    randomVector = function(min, max) {
         if(typeof min == "Vector" && typeof max == "Vector") 
             return Vector(RandomFloat(min.x, max.x), RandomFloat(min.y, max.y), RandomFloat(min.z, max.z))
         return Vector(RandomFloat(min, max), RandomFloat(min, max), RandomFloat(min, max))
-    } 
+    },
+
+    reflectVector = function(dir, normal) {
+        return dir - normal * (dir.Dot(normal) * 2)
+    }
 }
 /*+--------------------------------------------------------------------------------+
 |                           PCapture Vscripts Library                               |
@@ -891,6 +894,240 @@ class arrayLib {
 | Author:                                                                           |
 |     One-of-a-Kind - laVashik :D                                                   |
  +---------------------------------------------------------------------------------+
+| PCapture-utils.nut                                                                |
+|       A collection of utility functions for script execution and debugging.       |
+|       It's a Swiss army knife for developers working with Squirrel :D             |
++----------------------------------------------------------------------------------+ */
+
+
+RunScriptCode <- {
+    /* Creates a delay before executing the specified script.
+    * 
+    * @param {string|function} script - The script to execute. Can be a function or a string.
+    * @param {int|float} runDelay - The delay in seconds.
+    * @param {CBaseEntity|pcapEntity} activator - The activator entity. (optional)
+    * @param {CBaseEntity|pcapEntity} caller - The caller entity. (optional)
+    */
+    delay = function(script, runDelay, activator = null, caller = null) {
+        if (typeof script == "function")
+            return CreateScheduleEvent("global", script, runDelay)
+
+        EntFireByHandle(self, "runscriptcode", script, runDelay, activator, caller)
+    },  
+
+    /* Executes a function repeatedly with a specified delay for a given number of loops.
+    * 
+    * @param {string} func - The function to execute.
+    * @param {int|float} runDelay - The delay between each execution in seconds.
+    * @param {int|float} loop - The number of loops.
+    * @param {string} outputs - The function to execute after all loops completed. (optional)
+    */
+    loopy = function(func, runDelay, loop, outputs = null) {
+        if (loop > 0) {
+            this.delay(func, runDelay)
+            this.delay("loopy(\"" + func + "\"," + runDelay + "," + (loop - 1) + ",\"" + outputs + "\")", runDelay)
+        } else if (outputs)
+            this.delay(outputs, 0)
+    },
+
+    /* Schedules the execution of a script recursively at a fixed interval.
+     *
+     * This function schedules the provided script to run repeatedly at a specified interval. After each execution,
+     * the function schedules itself to run again, creating a loop that continues until you cancel the event
+     *
+     * @param {string|function} script - The script to be executed. Can be a function or a string containing code.
+     * @param {int|float} runDelay - The time delay between consecutive executions in seconds.
+     * @param {string} eventName - The name of the event used for scheduling. (optional, default="global")
+     */
+    recursive = function(script, runDelay = FrameTime(), eventName = "global") {
+        local runAgain = function() : (script, runDelay, eventName) {
+            RunScriptCode.recursive(script, runDelay, eventName)
+        }
+        
+        CreateScheduleEvent(eventName, script, runDelay)
+        CreateScheduleEvent(eventName, runAgain, runDelay)
+    },
+
+    /* Execute a script from a string.
+    * 
+    * @param {string} str - The script string.
+    */
+    fromStr = function(str) {
+        compilestring(str)()
+    }
+}
+
+
+dev <- {
+    /* Draws the bounding box of an entity for the specified time.
+    * 
+    * @param {CBaseEntity|pcapEntity} ent - The entity to draw the bounding box for.
+    * @param {int|float} time - The duration of the display in seconds.
+    */
+    DrawEntityBBox = function(ent, time) {
+        DebugDrawBox(ent.GetOrigin(), ent.GetBoundingMins(), ent.GetBoundingMaxs(), 255, 165, 0, 9, time)
+    },
+
+    /* Draws a box at the specified vector position for the specified time.
+    * 
+    * @param {Vector} vector - The position of the box.
+    * @param {Vector} color - The color of the box.
+    * @param {int|float} time - The duration of the display in seconds. (optional)
+    */
+    drawbox = function(vector, color, time = 0.05) {
+        DebugDrawBox(vector, Vector(-1,-1,-1), Vector(1,1,1), color.x, color.y, color.z, 100, time)
+    },
+
+
+    /* Logs a message to the console only if developer mode is enabled.
+    * 
+    * @param {string} msg - The message to log.
+    */
+    log = function(msg) {
+        if (developer() != 0)
+            printl("� " + msg)
+    },
+
+    /* Displays a warning message in a specific format.
+    * 
+    * @param {string} msg - The warning message.
+    */
+    warning = function(msg) {
+        _more_info("? Warning (%s [%d]): %s", msg)
+    },
+
+    /* Displays an error message in a specific format.
+    * 
+    * @param {string} msg - The error message.
+    */
+    error = function(msg) {
+        _more_info("?? *ERROR*: [func = %s; line = %d] | %s", msg)
+        SendToConsole("playvol resource/warning.wav 1")
+    },
+
+    /*
+    * Formats and prints detailed debug info.
+    *
+    * @param {string} pattern - Printf pattern 
+    * @param {string} msg - The error message
+    */  
+    _more_info = function(pattern, msg) {
+        if (developer() == 0)
+            return
+
+        local info = getstackinfos(3)
+        local func_name = info.func
+        if (func_name == "main" || func_name == "unknown")
+            func_name = "file " + info.src
+
+        printl(format(pattern, func_name, info.line, msg))
+    }
+}
+
+
+/* Prints a formatted message to the console.
+* 
+* @param {string} msg - The message string containing `{}` placeholders.
+* @param {any} vargs... - Additional arguments to substitute into the placeholders.
+
+*/
+function fprint(msg, ...) {
+
+    // If you are sure of what you are doing, you don't have to use it
+    local subst_count = 0;
+    for (local i = 0; i < msg.len() - 1; i++) {
+        if (msg.slice(i, i+2) == "{}") {
+            subst_count++; 
+        }
+    }
+    if (subst_count != vargc) {
+        throw("Discrepancy between the number of arguments and substitutions")
+    }
+
+
+    local args = array(vargc)
+    for(local i = 0; i< vargc; i++) {
+        args[i] = vargv[i]
+    }
+
+    if (msg.slice(0, 2) == "{}") {
+        msg = args[0] + msg.slice(2); 
+        args.remove(0); 
+    }
+
+    local parts = split(msg, "{}");
+    local result = "";
+
+    for (local i = 0; i < parts.len(); i++) {
+        result += parts[i];
+        if (i < args.len()) {
+            result += args[i].tostring();
+        }
+    }
+
+    printl(result)
+}
+
+
+
+/* Converts a string to a Vector object.
+* 
+* @param {string} str - The string representation of the vector, e.g., "x y z".
+* @returns {Vector} - The converted vector.
+*/
+function StrToVec(str) {
+    local str_arr = split(str, " ")
+    local vec = Vector(str_arr[0].tointeger(), str_arr[1].tointeger(), str_arr[2].tointeger())
+    return vec
+}
+
+
+/* Gets the prefix of the entity name.
+*
+* @returns {string} - The prefix of the entity name.
+*/
+function GetPrefix(name) {
+    local parts = split(name, "-")
+    if(parts.len() == 0)
+        return name
+    
+    local lastPartLength = parts.pop().len()
+    local prefix = name.slice(0, -lastPartLength)
+    return prefix;
+}
+
+
+/* Gets the postfix of the entity name.
+*
+* @returns {string} - The postfix of the entity name.
+*/
+function GetPostfix(name) {
+    local parts = split(name, "-")
+    if(parts.len() == 0)
+        return name
+
+    local lastPartLength = parts[0].len();
+    local prefix = name.slice(lastPartLength);
+    return prefix;
+}
+
+
+/* Precaches a sound script for later use.
+* 
+* @param {string|array|arrayLib} sound_path - The path to the sound script.
+*/
+function Precache(sound_path) {
+    if(typeof sound_path == "string")
+        return self.PrecacheSoundScript(sound_path)
+    foreach(path in sound_path)
+        self.PrecacheSoundScript(path)
+}
+/*+--------------------------------------------------------------------------------+
+|                           PCapture Vscripts Library                               |
+ +---------------------------------------------------------------------------------+
+| Author:                                                                           |
+|     One-of-a-Kind - laVashik :D                                                   |
+ +---------------------------------------------------------------------------------+
 | PCapture-entities.nut                                                             |
 |       Improved Entities Module. Contains A VERY LARGE number                      |
 |       of different functions that you just missed later!                          |
@@ -906,12 +1143,12 @@ if("entLib" in getroottable()) {
 *
 * @param {CBaseEntity} entity - The entity object.
 * @param {string} type - The type of entity.
-* @returns {PCapLib-Entities} - A new entity object.
+* @returns {pcapEntity} - A new entity object.
 */
 function init(CBaseEntity) {
     if(!CBaseEntity)
         return null
-    return pcapEntities(CBaseEntity)
+    return pcapEntity(CBaseEntity)
 }
 
 class entLib {
@@ -919,10 +1156,10 @@ class entLib {
     *
     * @param {string} classname - The classname of the entity.
     * @param {table} keyvalues - The key-value pairs for the entity.
-    * @returns {PCapLib-Entities} - The created entity object.
+    * @returns {pcapEntity} - The created entity object.
     */
     function CreateByClassname(classname, keyvalues = {}) {
-        local new_entity = pcapEntities(Entities.CreateByClassname(classname))
+        local new_entity = pcapEntity(Entities.CreateByClassname(classname))
         foreach(key, value in keyvalues) {
             new_entity.SetKeyValue(key, value)
         }
@@ -930,7 +1167,7 @@ class entLib {
     }
 
     function CreateProp(classname, origin, modelname, activity = 1, keyvalues = {}) {
-        local new_entity = pcapEntities(CreateProp(classname, origin, modelname, activity))
+        local new_entity = pcapEntity(CreateProp(classname, origin, modelname, activity))
         foreach(key, value in keyvalues) {
             new_entity.SetKeyValue(key, value)
         }
@@ -943,10 +1180,10 @@ class entLib {
     *
     * @param {string} classname - The classname to search for.
     * @param {CBaseEntity} start_ent - The starting entity to search within.
-    * @returns {PCapLib-Entities} - The found entity object.
+    * @returns {pcapEntity} - The found entity object.
     */
     function FindByClassname(classname, start_ent = null) {
-        if(start_ent && typeof start_ent == "PCapLib-Entities")
+        if(start_ent && typeof start_ent == "pcapEntity")
             start_ent = start_ent.CBaseEntity
         local new_entity = Entities.FindByClassname(start_ent, classname)
         return init(new_entity)
@@ -959,10 +1196,10 @@ class entLib {
     * @param {Vector} origin - The origin position.
     * @param {int} radius - The search radius.
     * @param {CBaseEntity} start_ent - The starting entity to search within.
-    * @returns {PCapLib-Entities} - The found entity object.
+    * @returns {pcapEntity} - The found entity object.
     */
     function FindByClassnameWithin(classname, origin, radius, start_ent = null) {
-        if(start_ent && typeof start_ent == "PCapLib-Entities")
+        if(start_ent && typeof start_ent == "pcapEntity")
             start_ent = start_ent.CBaseEntity
         local new_entity = Entities.FindByClassnameWithin(start_ent, classname, origin, radius)
         return init(new_entity)
@@ -973,10 +1210,10 @@ class entLib {
     *
     * @param {string} targetname - The targetname to search for.
     * @param {CBaseEntity} start_ent - The starting entity to search within.
-    * @returns {PCapLib-Entities} - The found entity object.
+    * @returns {pcapEntity} - The found entity object.
     */
     function FindByName(targetname, start_ent = null) {
-        if(start_ent && typeof start_ent == "PCapLib-Entities")
+        if(start_ent && typeof start_ent == "pcapEntity")
             start_ent = start_ent.CBaseEntity
         local new_entity = Entities.FindByName(start_ent, targetname)
         return init(new_entity)
@@ -989,10 +1226,10 @@ class entLib {
     * @param {Vector} origin - The origin position.
     * @param {int} radius - The search radius.
     * @param {CBaseEntity} start_ent - The starting entity to search within.
-    * @returns {PCapLib-Entities} - The found entity object.
+    * @returns {pcapEntity} - The found entity object.
     */
     function FindByNameWithin(targetname, origin, radius, start_ent = null) {
-        if(start_ent && typeof start_ent == "PCapLib-Entities")
+        if(start_ent && typeof start_ent == "pcapEntity")
             start_ent = start_ent.CBaseEntity
         local new_entity = Entities.FindByNameWithin(start_ent, targetname, origin, radius)
         return init(new_entity)
@@ -1003,10 +1240,10 @@ class entLib {
     *
     * @param {string} model - The model to search for.
     * @param {CBaseEntity} start_ent - The starting entity to search within.
-    * @returns {PCapLib-Entities} - The found entity object.
+    * @returns {pcapEntity} - The found entity object.
     */
     function FindByModel(model, start_ent = null) {
-        if(start_ent && typeof start_ent == "PCapLib-Entities")
+        if(start_ent && typeof start_ent == "pcapEntity")
             start_ent = start_ent.CBaseEntity
         local new_entity = Entities.FindByModel(start_ent, model)
         return init(new_entity)
@@ -1019,10 +1256,10 @@ class entLib {
     * @param {Vector} origin - The origin position.
     * @param {int} radius - The search radius.
     * @param {CBaseEntity} start_ent - The starting entity to search within.
-    * @returns {PCapLib-Entities} - The found entity object.
+    * @returns {pcapEntity} - The found entity object.
     */
     function FindByModelWithin(model, origin, radius, start_ent = null) {
-        if(start_ent && typeof start_ent == "PCapLib-Entities")
+        if(start_ent && typeof start_ent == "pcapEntity")
             start_ent = start_ent.CBaseEntity
         local new_entity = null
         for(local ent; ent = FindByClassnameWithin("*", origin, radius, start_ent);) {
@@ -1041,10 +1278,10 @@ class entLib {
     * @param {Vector} origin - The origin position of the sphere.
     * @param {int} radius - The radius of the sphere.
     * @param {CBaseEntity} start_ent - The starting entity to search within.
-    * @returns {PCapLib-Entities} - The found entity object.
+    * @returns {pcapEntity} - The found entity object.
     */
     function FindInSphere(origin, radius, start_ent = null) {
-        if(start_ent && typeof start_ent == "PCapLib-Entities")
+        if(start_ent && typeof start_ent == "pcapEntity")
             start_ent = start_ent.CBaseEntity
         local new_entity = Entities.FindInSphere(start_ent, origin, radius)
         return init(new_entity)
@@ -1052,7 +1289,7 @@ class entLib {
 
 
     function FromEntity(CBaseEntity) {
-        if(typeof CBaseEntity == "PCapLib-Entities")
+        if(typeof CBaseEntity == "pcapEntity")
             return CBaseEntity
         return init(CBaseEntity)
     }
@@ -1061,7 +1298,7 @@ class entLib {
 
 
 
-class pcapEntities {
+class pcapEntity {
     CBaseEntity = null;
     Scope = {}
 
@@ -1070,7 +1307,7 @@ class pcapEntities {
     * @param {CBaseEntity} entity - The entity object.
     */
     constructor(entity = null) {
-        if(typeof entity == "PCapLib-Entities")
+        if(typeof entity == "pcapEntity")
             entity = entity.CBaseEntity
             
         if(entity == null) return null
@@ -1186,12 +1423,12 @@ class pcapEntities {
 
     /* Sets the parent of the entity.
     *
-    * @param {string|CBaseEntity|PCapLib-Entities} parent - The parent entity object.
+    * @param {string|CBaseEntity|pcapEntity} parent - The parent entity object.
     * @param {int|float} fireDelay - Delay in seconds before applying.
     */
     function SetParent(parentEnt, fireDelay = 0) {
         this.SetUserData("parent", parentEnt)
-        if(typeof parentEnt == "PCapLib-Entities" || typeof parentEnt == "instance") {
+        if(typeof parentEnt == "pcapEntity" || typeof parentEnt == "instance") {
             if(parentEnt.GetName() == "") {
                 parentEnt.SetName(UniqueString("parent"))
             }
@@ -1477,7 +1714,7 @@ class pcapEntities {
     * @returns {string} - The string representation of the entity.
     */
     function _tostring() {
-        return "PCapLib-Entities: " + this.CBaseEntity + ""
+        return "pcapEntity: " + this.CBaseEntity + ""
     }
 
 
@@ -1486,7 +1723,7 @@ class pcapEntities {
     * @returns {string} - The type of the entity object.
     */
     function _typeof() {
-        return "PCapLib-Entities"
+        return "pcapEntity"
     }
 
 
@@ -1555,43 +1792,43 @@ class pcapEntities {
     }
 }
 
-function pcapEntities::ConnectOutput(output, func_name) this.CBaseEntity.ConnectOutput(output, func_name)
-function pcapEntities::DisconnectOutput(output, func_name) this.CBaseEntity.DisconnectOutput(output, func_name)
-function pcapEntities::EmitSound(sound_name) this.CBaseEntity.EmitSound(sound_name)
-function pcapEntities::PrecacheSoundScript(sound_name) this.CBaseEntity.PrecacheSoundScript(sound_name)
-function pcapEntities::IsSequenceFinished() return this.CBaseEntity.IsSequenceFinished()
-function pcapEntities::SpawnEntity() this.CBaseEntity.SpawnEntity()
+function pcapEntity::ConnectOutput(output, func_name) this.CBaseEntity.ConnectOutput(output, func_name)
+function pcapEntity::DisconnectOutput(output, func_name) this.CBaseEntity.DisconnectOutput(output, func_name)
+function pcapEntity::EmitSound(sound_name) this.CBaseEntity.EmitSound(sound_name)
+function pcapEntity::PrecacheSoundScript(sound_name) this.CBaseEntity.PrecacheSoundScript(sound_name)
+function pcapEntity::IsSequenceFinished() return this.CBaseEntity.IsSequenceFinished()
+function pcapEntity::SpawnEntity() this.CBaseEntity.SpawnEntity()
 
-function pcapEntities::GetAngles() return this.CBaseEntity.GetAngles()
-function pcapEntities::GetAngularVelocity() return this.CBaseEntity.GetAngularVelocity()
-function pcapEntities::GetBoundingMaxs() return this.CBaseEntity.GetBoundingMaxs()
-function pcapEntities::GetBoundingMins() return this.CBaseEntity.GetBoundingMins()
-function pcapEntities::GetCenter() return this.CBaseEntity.GetCenter()
-function pcapEntities::GetClassname() return this.CBaseEntity.GetClassname()
-function pcapEntities::GetForwardVector() return this.CBaseEntity.GetForwardVector()
-function pcapEntities::GetHealth() return this.CBaseEntity.GetHealth()
-function pcapEntities::GetLeftVector() return this.CBaseEntity.GetLeftVector()
-function pcapEntities::GetMaxHealth() return this.CBaseEntity.GetMaxHealth()
-function pcapEntities::GetModelKeyValues() return this.CBaseEntity.GetModelKeyValues()
-function pcapEntities::GetModelName() return this.CBaseEntity.GetModelName()
-function pcapEntities::GetName() return this.CBaseEntity.GetName()
-function pcapEntities::GetOrigin() return this.CBaseEntity.GetOrigin()
-function pcapEntities::GetScriptId() return this.CBaseEntity.GetScriptId()
-function pcapEntities::GetUpVector() return this.CBaseEntity.GetUpVector()
-function pcapEntities::GetPartnername() return this.CBaseEntity.GetPartnername()
-function pcapEntities::GetPartnerInstance() return this.CBaseEntity.GetPartnerInstance()
-function pcapEntities::ValidateScriptScope() return this.CBaseEntity.ValidateScriptScope()
-function pcapEntities::EyePosition() return this.CBaseEntity.EyePosition()
+function pcapEntity::GetAngles() return this.CBaseEntity.GetAngles()
+function pcapEntity::GetAngularVelocity() return this.CBaseEntity.GetAngularVelocity()
+function pcapEntity::GetBoundingMaxs() return this.CBaseEntity.GetBoundingMaxs()
+function pcapEntity::GetBoundingMins() return this.CBaseEntity.GetBoundingMins()
+function pcapEntity::GetCenter() return this.CBaseEntity.GetCenter()
+function pcapEntity::GetClassname() return this.CBaseEntity.GetClassname()
+function pcapEntity::GetForwardVector() return this.CBaseEntity.GetForwardVector()
+function pcapEntity::GetHealth() return this.CBaseEntity.GetHealth()
+function pcapEntity::GetLeftVector() return this.CBaseEntity.GetLeftVector()
+function pcapEntity::GetMaxHealth() return this.CBaseEntity.GetMaxHealth()
+function pcapEntity::GetModelKeyValues() return this.CBaseEntity.GetModelKeyValues()
+function pcapEntity::GetModelName() return this.CBaseEntity.GetModelName()
+function pcapEntity::GetName() return this.CBaseEntity.GetName()
+function pcapEntity::GetOrigin() return this.CBaseEntity.GetOrigin()
+function pcapEntity::GetScriptId() return this.CBaseEntity.GetScriptId()
+function pcapEntity::GetUpVector() return this.CBaseEntity.GetUpVector()
+function pcapEntity::GetPartnername() return this.CBaseEntity.GetPartnername()
+function pcapEntity::GetPartnerInstance() return this.CBaseEntity.GetPartnerInstance()
+function pcapEntity::ValidateScriptScope() return this.CBaseEntity.ValidateScriptScope()
+function pcapEntity::EyePosition() return this.CBaseEntity.EyePosition()
 
-function pcapEntities::SetAbsOrigin(vector) this.CBaseEntity.SetAbsOrigin(vector)
-function pcapEntities::SetForwardVector(vector) this.CBaseEntity.SetForwardVector(vector)
-function pcapEntities::SetHealth(health) this.CBaseEntity.SetHealth(health)
-function pcapEntities::SetMaxHealth(health) this.CBaseEntity.SetMaxHealth(health)
-function pcapEntities::SetModel(model_name) this.CBaseEntity.SetModel(model_name)
-function pcapEntities::SetOrigin(vector) this.CBaseEntity.SetOrigin(vector)
+function pcapEntity::SetAbsOrigin(vector) this.CBaseEntity.SetAbsOrigin(vector)
+function pcapEntity::SetForwardVector(vector) this.CBaseEntity.SetForwardVector(vector)
+function pcapEntity::SetHealth(health) this.CBaseEntity.SetHealth(health)
+function pcapEntity::SetMaxHealth(health) this.CBaseEntity.SetMaxHealth(health)
+function pcapEntity::SetModel(model_name) this.CBaseEntity.SetModel(model_name)
+function pcapEntity::SetOrigin(vector) this.CBaseEntity.SetOrigin(vector)
 
 
-// add CBaseEnts check with pcapEntities
+// add CBaseEnts check with pcapEntity
 /*+--------------------------------------------------------------------------------+
 |                           PCapture Vscripts Library                               |
  +---------------------------------------------------------------------------------+
@@ -1798,7 +2035,7 @@ class bboxcast {
     *
     * @param {Vector} startpos - Start position.
     * @param {Vector} endpos - End position.
-    * @param {CBaseEntity|array} ignoreEnt - Entity to ignore. 
+    * @param {CBaseEntity|pcapEntity|array|arrayLib} ignoreEnt - Entity to ignore. 
     * @param {object} settings - Trace settings.
     */
     constructor(startpos, endpos, ignoreEnt = null, settings = ::defaultSettings) {
@@ -1998,8 +2235,7 @@ class bboxcast {
     * @returns {boolean} True if should ignore.
     */
     function _checkEntityIsIgnored(ent, ignoreEnt) {
-
-        if(typeof ignoreEnt == "PCapLib-Entities")
+        if(typeof ignoreEnt == "pcapEntity")
             ignoreEnt = ignoreEnt.CBaseEntity
 
         local classname = ent.GetClassname()
@@ -2007,9 +2243,9 @@ class bboxcast {
         if(traceSettings.customFilter && traceSettings.customFilter(ent))
             return false
 
-        if (type(ignoreEnt) == "array") {
+        if (typeof ignoreEnt == "array" || typeof ignoreEnt == "arrayLib") {
             foreach (mask in ignoreEnt) {
-                if(typeof mask == "PCapLib-Entities")
+                if(typeof mask == "pcapEntity")
                     mask = mask.CBaseEntity
                 if (mask == ent) {
                     return false;
@@ -2097,8 +2333,11 @@ class bboxcast {
 function bboxcast::TracePlayerEyes(distance, ignoreEnt = null, settings = ::defaultSettings, player = null) { // TODO ????????????????? ????????? CO-OP!
     // Get the player's eye position and forward direction
     if(player == null) 
-        player = entLib.FromEntity(GetPlayer())
-    if(!player) return bboxcast(Vector(0, 0, 0), Vector(1, 1, 1))
+        player = GetPlayerEx()
+    if(!player) 
+        return bboxcast(Vector(), Vector())
+    if(typeof player != "pcapEntity") 
+        player = entLib.FromEntity(player)
     
     local eyePointEntity = player.GetUserData("Eye")
     local eyePosition = eyePointEntity.GetOrigin()
@@ -2111,7 +2350,7 @@ function bboxcast::TracePlayerEyes(distance, ignoreEnt = null, settings = ::defa
     // Check if any entities should be ignored during the trace
     if (ignoreEnt) {
         // If ignoreEnt is an array, append the player entity to it
-        if (type(ignoreEnt) == "array") {
+        if (type(ignoreEnt) == "array" || typeof ignoreEnt == "arrayLib") {
             ignoreEnt.append(player)
         }
         // If ignoreEnt is a single entity, create a new array with both the player and ignoreEnt
@@ -2218,7 +2457,7 @@ animate <- {
     /* 
     * Smoothly changes the alpha value of an entities from the initial value to the final value over a specified time.
     * 
-    * @param {PCapLib-Entities|CBaseEntity|string} entities - The entities (or targetname) to animate.
+    * @param {pcapEntity|CBaseEntity|string} entities - The entities (or targetname) to animate.
     * @param {int} startOpacity - The initial opacity value.
     * @param {int} endOpacity - The final opacity value.
     * @param {int|float} time - The duration of the animation in seconds.
@@ -2261,7 +2500,7 @@ animate <- {
     /*  
     * Smoothly changes the color of entities from start to end over time. 
     *
-    * @param {PCapLib-Entities|CBaseEntity|string} entities - The entities.
+    * @param {pcapEntity|CBaseEntity|string} entities - The entities.
     * @param {string|Vector} startColor - The starting color.
     * @param {string|Vector} endColor - The ending color.
     * @param {int|float} time - The duration in seconds.  
@@ -2297,7 +2536,7 @@ animate <- {
     /* 
     * Moves an entities from the start position to the end position over a specified time based on increments of time.
     * 
-    * @param {PCapLib-Entities|CBaseEntity|string} entities - The entities (or targetname) to animate.
+    * @param {pcapEntity|CBaseEntity|string} entities - The entities (or targetname) to animate.
     * @param {Vector} startPos - The initial position.
     * @param {Vector} endPos - The final position.
     * @param {int|float} time - The duration of the animation in seconds.
@@ -2334,7 +2573,7 @@ animate <- {
     
     /* Moves an entities from the start position to the end position over a specified time based on speed.
     * 
-    * @param {PCapLib-Entities|CBaseEntity|string} entities - The entities to animate.
+    * @param {pcapEntity|CBaseEntity|string} entities - The entities to animate.
     * @param {Vector} startPos - The initial position.
     * @param {Vector} endPos - The final position.
     * @param {int|float} speed - The speed at which to move the entities in units per second.
@@ -2376,7 +2615,7 @@ animate <- {
     /*
     * Changes angles of entities from start to end over time.
     *
-    * @param {PCapLib-Entities|CBaseEntity|string} entities - The entities.
+    * @param {pcapEntity|CBaseEntity|string} entities - The entities.
     * @param {Vector} startAngles - Starting angles.  
     * @param {Vector} endAngles - Ending angles.
     * @param {int|float} time - Duration in seconds. 
@@ -2415,7 +2654,7 @@ animate <- {
 /*
 * Gets a valid event name for the entities.
 * 
-* @param {PCapLib-Entities|CBaseEntity|string} entities - The entities.
+* @param {pcapEntity|CBaseEntity|string} entities - The entities.
 * @param {object} EventSetting - The event settings.
 * @returns {string} The event name. 
 */
@@ -2436,8 +2675,8 @@ function _GetValidEventName(entities, EventSetting) {
 /*
 * Gets valid entity/entities from input.
 *
-* @param {PCapLib-Entities|CBaseEntity|string} entities - The entity input.  
-* @returns {array(PCapLib-Entities)} Valid entity/entities.
+* @param {pcapEntity|CBaseEntity|string} entities - The entity input.  
+* @returns {array(pcapEntity)} Valid entity/entities.
 */ 
 function _GetValidEntitiy(entities) {
     if (typeof entities == "string") {
@@ -2451,228 +2690,30 @@ function _GetValidEntitiy(entities) {
         }
     }
             
-    if (typeof entities != "PCapLib-Entities")
-            return [pcapEntities(entities)]
+    if (typeof entities != "pcapEntity")
+            return [pcapEntity(entities)]
     
     return [entities]
 }
 
-
-
-
-RunScriptCode <- {
-    /* Creates a delay before executing the specified script.
-    * 
-    * @param {string|function} script - The script to execute. Can be a function or a string.
-    * @param {int|float} delay - The delay in seconds.
-    * @param {CBaseEntity|PCapLib-Entities} activator - The activator entity. (optional)
-    * @param {CBaseEntity|PCapLib-Entities} caller - The caller entity. (optional)
-    */
-    delay = function(script, delay, activator = null, caller = null) {
-        if (typeof script == "function")
-            return CreateScheduleEvent("global", script, delay)
-
-        EntFireByHandle(self, "runscriptcode", script, delay, activator, caller)
-    },  
-
-    /* Executes a function repeatedly with a specified delay for a given number of loops.
-    * 
-    * @param {string} func - The function to execute.
-    * @param {int|float} delay - The delay between each execution in seconds.
-    * @param {int|float} loop - The number of loops.
-    * @param {string} outputs - The function to execute after all loops completed. (optional)
-    */
-    loopy = function(func, delay, loop, outputs = null) {
-        if (loop > 0) {
-            delay(func, delay)
-            delay("loopy(\"" + func + "\"," + delay + "," + (loop - 1) + ",\"" + outputs + "\")", delay)
-        } else if (outputs)
-            delay(outputs, 0)
-    },
-
-    /* Execute a script from a string.
-    * 
-    * @param {string} str - The script string.
-    */
-    fromStr = function(str) {
-        compilestring(str)()
-    }
-}
-
-
-dev <- {
-    /* Draws the bounding box of an entity for the specified time.
-    * 
-    * @param {CBaseEntity|PCapLib-Entities} ent - The entity to draw the bounding box for.
-    * @param {int|float} time - The duration of the display in seconds.
-    */
-    DrawEntityBBox = function(ent, time) {
-        DebugDrawBox(ent.GetOrigin(), ent.GetBoundingMins(), ent.GetBoundingMaxs(), 255, 165, 0, 9, time)
-    },
-
-    /* Draws a box at the specified vector position for the specified time.
-    * 
-    * @param {Vector} vector - The position of the box.
-    * @param {Vector} color - The color of the box.
-    * @param {int|float} time - The duration of the display in seconds. (optional)
-    */
-    drawbox = function(vector, color, time = 0.05) {
-        DebugDrawBox(vector, Vector(-1,-1,-1), Vector(1,1,1), color.x, color.y, color.z, 100, time)
-    },
-
-
-    /* Logs a message to the console only if developer mode is enabled.
-    * 
-    * @param {string} msg - The message to log.
-    */
-    log = function(msg) {
-        if (developer() != 0)
-            printl("• " + msg)
-    },
-
-    /* Displays a warning message in a specific format.
-    * 
-    * @param {string} msg - The warning message.
-    */
-    warning = function(msg) {
-        _more_info("► Warning (%s [%d]): %s", msg)
-    },
-
-    /* Displays an error message in a specific format.
-    * 
-    * @param {string} msg - The error message.
-    */
-    error = function(msg) {
-        _more_info("▄▀ *ERROR*: [func = %s; line = %d] | %s", msg)
-        SendToConsole("playvol resource/warning.wav 1")
-    },
-
-    /*
-    * Formats and prints detailed debug info.
-    *
-    * @param {string} pattern - Printf pattern 
-    * @param {string} msg - The error message
-    */  
-    _more_info = function(pattern, msg) {
-        if (developer() == 0)
-            return
-
-        local info = getstackinfos(3)
-        local func_name = info.func
-        if (func_name == "main" || func_name == "unknown")
-            func_name = "file " + info.src
-
-        printl(format(pattern, func_name, info.line, msg))
-    }
-}
-
-
-/* Prints a formatted message to the console.
-* 
-* @param {string} msg - The message string containing `{}` placeholders.
-* @param {any} vargs... - Additional arguments to substitute into the placeholders.
-
-*/
-function fprint(msg, ...) {
-
-    // If you are sure of what you are doing, you don't have to use it
-    local subst_count = 0;
-    for (local i = 0; i < msg.len() - 1; i++) {
-        if (msg.slice(i, i+2) == "{}") {
-            subst_count++; 
-        }
-    }
-    if (subst_count != vargc) {
-        throw("Discrepancy between the number of arguments and substitutions")
-    }
-
-
-    local args = array(vargc)
-    for(local i = 0; i< vargc; i++) {
-        args[i] = vargv[i]
-    }
-
-    if (msg.slice(0, 2) == "{}") {
-        msg = args[0] + msg.slice(2); 
-        args.remove(0); 
-    }
-
-    local parts = split(msg, "{}");
-    local result = "";
-
-    for (local i = 0; i < parts.len(); i++) {
-        result += parts[i];
-        if (i < args.len()) {
-            result += args[i].tostring();
-        }
-    }
-
-    printl(result)
-}
-
-
-/******************************************************************************
-*                            UTILITY FUNCTIONS
-******************************************************************************/
-
-/* Converts a string to a Vector object.
-* 
-* @param {string} str - The string representation of the vector, e.g., "x y z".
-* @returns {Vector} - The converted vector.
-*/
-function StrToVec(str) {
-    local str_arr = split(str, " ")
-    local vec = Vector(str_arr[0].tointeger(), str_arr[1].tointeger(), str_arr[2].tointeger())
-    return vec
-}
-
-
-/* Gets the prefix of the entity name.
-*
-* @returns {string} - The prefix of the entity name.
-*/
-function GetPrefix(name) {
-    local parts = split(name, "-")
-    if(parts.len() == 0)
-        return name
-    
-    local lastPartLength = parts.pop().len()
-    local prefix = name.slice(0, -lastPartLength)
-    return prefix;
-}
-
-
-/* Gets the postfix of the entity name.
-*
-* @returns {string} - The postfix of the entity name.
-*/
-function GetPostfix(name) {
-    local parts = split(name, "-")
-    if(parts.len() == 0)
-        return name
-
-    local lastPartLength = parts[0].len();
-    local prefix = name.slice(lastPartLength);
-    return prefix;
-}
-
-
-/* Precaches a sound script for later use.
-* 
-* @param {string|array} sound_path - The path to the sound script.
-*/
-function Precache(sound_path) {
-    if(typeof sound_path == "string")
-        return self.PrecacheSoundScript(sound_path)
-    foreach(path in sound_path)
-        self.PrecacheSoundScript(path)
-}
+/*+--------------------------------------------------------------------------------+
+|                           PCapture Vscripts Library                               |
+ +---------------------------------------------------------------------------------+
+| Author:                                                                           |
+|     One-of-a-Kind - laVashik :D                                                   |
+ +---------------------------------------------------------------------------------+
+| PCapture-Improvements.nut                                                         |
+|       Overrides and improves existing standard VScripts functions.                |
+|                                                                                   |
++----------------------------------------------------------------------------------+ */
 
 
 // Overwriting existing functions to improve them
 if("_EntFireByHandle" in getroottable()) {
+    dev.warning("Improvements module initialization skipped. Module already initialized.")
     return
 }
+
 
 /*
 * Limits frametime to avoid zero values.
@@ -2683,31 +2724,57 @@ _frametime <- FrameTime
 function FrameTime() {
     local tick = _frametime()
     if(tick == 0) 
-        return 0.033
-    return _frametime()
+        return 0.016
+    return tick
 }
+
 
 /*
 * Wrapper for EntFireByHandle to handle PCapLib objects.
 *
-* @param {CBaseEntity|PCapLib-Entities} target - Target entity.
+* @param {CBaseEntity|pcapEntity} target - Target entity.
 * @param {string} action - Action.
 * @param {string} value - Action value. (optional)
 * @param {number} delay - Delay in seconds. (optional)
-* @param {CBaseEntity|PCapLib-Entities} activator - Activator entity. (optional)
-* @param {CBaseEntity|PCapLib-Entities} caller - Caller entity. (optional)
+* @param {CBaseEntity|pcapEntity} activator - Activator entity. (optional)
+* @param {CBaseEntity|pcapEntity} caller - Caller entity. (optional)
 */
 _EntFireByHandle <- EntFireByHandle
 function EntFireByHandle(target, action, value = "", delay = 0, activator = null, caller = null) {
-    /* Extract the underlying entity from the PCapLib-Entities wrapper */
-    if (typeof target == "PCapLib-Entities")
+    /* Extract the underlying entity from the pcapEntity wrapper */
+    if (typeof target == "pcapEntity")
         target = target.CBaseEntity 
-    if (typeof activator == "PCapLib-Entities")
+    if (typeof activator == "pcapEntity")
         activator = activator.CBaseEntity 
-    if (typeof caller == "PCapLib-Entities")
+    if (typeof caller == "pcapEntity")
         caller = target.CBaseEntity 
 
     _EntFireByHandle(target, action, value, delay, activator, caller)
+}
+
+
+/*
+* Retrieves a player entity with extended functionality.
+* 
+* @param {int} index - The index of the player (1-based).
+* @returns {pcapEntity} - An extended player entity with additional methods.
+*/
+function GetPlayerEx(index = 1) { // TODO
+    return pcapPlayer(GetPlayer())
+}
+
+class pcapPlayer extends pcapEntity {
+    function EyePosition() {
+        return this.CBaseEntity.EyePosition()
+    }
+
+    function EyeAngles() {
+        return this.GetUserData("Eye").GetAngles()
+    }
+
+    function EyeForwardVector() {
+        return this.GetUserData("Eye").GetForwardVector()
+    }
 }
 
 dissolver <- entLib.CreateByClassname("env_entity_dissolver", {targetname = "@dissolver"})
