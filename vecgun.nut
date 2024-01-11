@@ -6,7 +6,7 @@ class VectronicGun {
     activeProjectiles = null;
 
     constructor(player) {
-        this.availablesModes(projectileModels.len(), false)
+        this.availablesModes = array(projectileModes.len(), false)
         this.owner = player;
         this.activeProjectiles = arrayLib.new()
     }
