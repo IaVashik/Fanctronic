@@ -1,9 +1,7 @@
-IncludeScript("fanctronic/pcapture-lib")
-IncludeScript("fanctronic/pcapture-lib")
-
-IncludeScript("Fanctronic/utils")
+IncludeScript("Fanctronic/pcapture-lib")
 IncludeScript("Fanctronic/projectile")
-IncludeScript("Fanctronic/instances")
+IncludeScript("Fanctronic/vecballs/main")
+IncludeScript("Fanctronic/vecgun")
 
 
 
@@ -13,10 +11,10 @@ const recursionDepth = 5
 const maxProjectilesOnMap = 10
 
 
-vecgunOwners <- []
+vecgunOwners <- {}
 for(local player; player = Entities.FindByClassname(player, "player");) {
     local vecgun = VectronicGun(player)
-    vecgunOwners.append(vecgun)
+    vecgunOwners[player] <- vecgun
 }
 
 
