@@ -57,7 +57,7 @@ function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
             break 
 
         local trace = bboxcast(startPos, endPos, caller)
-        local dirReflection = Reflect(trace.GetDir(), trace.GetImpactNormal()) // todo есть в либе???
+        local dirReflection = math.reflectVector(trace.GetDir(), trace.GetImpactNormal())
 
         local newEnd = end + dirReflection * maxDistance
 
