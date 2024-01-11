@@ -3,6 +3,8 @@ IncludeScript("Fanctronic/projectile")
 IncludeScript("Fanctronic/vecballs/main")
 IncludeScript("Fanctronic/vecgun")
 
+IncludeScript("Fanctronic/gameplay-elements/dispenser")
+
 
 
 const maxDistance = 3000

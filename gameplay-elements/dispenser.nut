@@ -10,6 +10,7 @@ function initDispancer(mode) {
     local vecballPoint = entLib.FindByName(prefix + "dispenser_vecball")
 
     local colorPrefix = "@" + ballMode.GetType() + "-"
+    printl(colorPrefix + "dispancer-spawn")
     entLib.FindByName(colorPrefix + "dispancer-spawn").SpawnEntity()
     local baseFX = entLib.FindByName(colorPrefix + "dispancer-base")
     local coreFX = entLib.FindByName(colorPrefix + "dispancer-core")
@@ -20,14 +21,17 @@ function initDispancer(mode) {
         coreFX.SetOrigin(basePoint.GetOrigin())
         vecballFX.SetOrigin(vecballPoint.GetOrigin())
 
-        baseFX.SetParent(basePoint)
-        coreFX.SetParent(basePoint)
-        vecballFX.SetParent(vecballPoint)
+        // baseFX.SetParent(basePoint)
+        // coreFX.SetParent(basePoint)
+        // vecballFX.SetParent(vecballPoint)
 
         baseFX.SetName(basePoint.GetName())
         coreFX.SetName(basePoint.GetName())
-        vecballFX.SetName(vecballFX.GetName())
+        vecballFX.SetName(vecballPoint.GetName())
 
+        EntFireByHandle(baseFX, "Start")
+        EntFireByHandle(coreFX, "Start")
+        EntFireByHandle(vecballFX, "Start")
     
     ballMode.appendDispancer(dispancer)
 }
