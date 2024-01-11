@@ -1,6 +1,6 @@
-local blue = vecProjectile(EntityGroup[0], "138 206 247", "blue")
+local blue = vecProjectile("blue", "138 206 247")
 blue.addHandleFunc(function(cargo) {
-    // todo
+    printl(cargo)
 })
 
 projectileModes.append(blue)
