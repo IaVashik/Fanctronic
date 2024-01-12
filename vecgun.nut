@@ -92,5 +92,5 @@ function VectronicGun::switchMode() {
 }
 
 function VectronicGun::GetBall() {
-    return this.projectileModes[this.currentMode]
+    return projectileModes[this.currentMode]
 }
