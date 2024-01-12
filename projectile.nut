@@ -71,28 +71,28 @@ function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
         local trace = bboxcast(startPos, endPos, caller)
         local dirReflection = math.reflectVector(trace.GetDir(), trace.GetImpactNormal())
 
-        local newEnd = end + dirReflection * maxDistance
+        local newEnd = endPos + dirReflection * maxDistance
 
         startPos = trace.GetHitpos() + dirReflection * 0.1
         endPos = bboxcast(startPos, newEnd).GetHitpos()
 
-        CreateScheduleEvent(eventName, function():(projectileEnt) {
-            projectileEnt.EmitSound("ParticleBall.Impact")
+        CreateScheduleEvent(eventName, function():(particleEnt) {
+            particleEnt.EmitSound("ParticleBall.Impact")
         }, animationDuration)
     }
 
     caller.EmitSound("VecLauncher.Fire")
     projectile.timeLife = animationDuration
 
-    EntFireByHandle(this.projectileEnt, "Start")
-    EntFireByHandle(this.projectileEnt, "Stop", "", animationDuration)
-    EntFireByHandle(this.projectileEnt, "kill", "", animationDuration + 1)
+    EntFireByHandle(particleEnt, "Start")
+    EntFireByHandle(particleEnt, "Stop", "", animationDuration)
+    EntFireByHandle(particleEnt, "kill", "", animationDuration + 1) // TODO надо наверное destroy вызывать
 
     local hitFunc = function() : (endPos, handleHitFunc) {        
         local cargo = entLib.FindByModelWithin("models/props/puzzlebox.mdl", endPos, 25)
         if(!cargo) return
 
-        this.handleHitFunc(vecBox(cargo))
+        handleHitFunc(vecBox(cargo))
         cargo.EmitSound("VecBox.Activate")
     }
     CreateScheduleEvent(eventName, hitFunc, animationDuration)
@@ -110,10 +110,20 @@ function vecProjectile::playParticle(particleName, originPos) {
     return particle
 }
 
+function vecProjectile::__createProjectile() {
+    local prefix = "@" + this.type + "-"
+
+    entLib.FindByName(prefix + "projectile-spawn").SpawnEntity()
+    local particle = entLib.FindByName(prefix + "projectile")
+
+    particle.SetName(this.type)
+    return particle
+}
+
 
 ::projectileCount <- []
 
-class launchedProjectile {
+::launchedProjectile <- class {
     particleEnt = null;
     eventName = null;
     type = null;
@@ -126,9 +136,11 @@ class launchedProjectile {
         this.eventName = eventName
         this.type = type
 
-        // An optional functionality, created purely for the sake of optimization
+        // An optional functionality, created purely for the sake of optimization       
         if(::projectileCount.len() > maxProjectilesOnMap) {
-            ::projectileCount[0].Destroy()
+            if(::projectileCount[0].IsValid()) 
+                ::projectileCount[0].Destroy()
+            ::projectileCount.remove(0)
         }
         this.__countIndex = ::projectileCount.len()
         ::projectileCount.append(this)
@@ -140,13 +152,13 @@ class launchedProjectile {
         ::projectileCount.remove(this.__countIndex)
     }
 
-    function isValid() {
-        return eventIsValid(eventName)
+    function IsValid() {
+        return eventIsValid(eventName) && particleEnt.IsValid()
     }
 
     function moveBetween(startPos, endPos, delay = 0) {
         return animate.PositionTransitionBySpeed(this.particleEnt, startPos, endPos, 
-            projectileSpeed, eventName, delay = 0)
+            projectileSpeed, {eventName = this.eventName, globalDelay =  delay})
     }
 
     function GetType() {
