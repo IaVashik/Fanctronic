@@ -25,6 +25,7 @@ class vecProjectile {
     function appendDispancer(ent) null
     
     function Shoot(startPos, endPos, caller = GetPlayer()) null
+    function playParticle(particleName, originPos) pcapEnt
 
     function __createProjectile() null
 }
@@ -91,12 +92,22 @@ function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
         local cargo = entLib.FindByModelWithin("models/props/puzzlebox.mdl", endPos, 25)
         if(!cargo) return
 
-        this.handleHitFunc(cargo)
+        this.handleHitFunc(vecBox(cargo))
         cargo.EmitSound("VecBox.Activate")
     }
     CreateScheduleEvent(eventName, hitFunc, animationDuration)
 
     return projectile
+}
+
+function vecProjectile::playParticle(particleName, originPos) {
+    local particle = entLib.FindByName("@" + this.type + "-" + particleName)
+
+    particle.SetOrigin(originPos)
+    EntFireByHandle(particle, "Stop")
+    EntFireByHandle(particle, "Start", "", 0.01)
+
+    return particle
 }
 
 
