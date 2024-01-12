@@ -1,4 +1,4 @@
-projectileModes <- []
+::projectileModes <- []
 
 IncludeScript("fanctronic/vecballs/blue") // ".../*" :<
 IncludeScript("fanctronic/vecballs/green")

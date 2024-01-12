@@ -30,19 +30,21 @@ function VectronicGun::Shoot() {
 
     local projectile = this.GetBall().Shoot(start, hit, this.owner)
 
-    local idx = activeProjectiles.len()
-    activeProjectiles.append(projectile)
-    CreateScheduleEvent(projectile.eventName, function() : (activeProjectiles, idx) {
-        activeProjectiles.remove(idx)
-    }, projectile.timeLife)
+    // local idx = activeProjectiles.len()
+    // activeProjectiles.append(projectile)
+    // CreateScheduleEvent(projectile.eventName, function() : (activeProjectiles, idx) {
+    //     activeProjectiles.remove(idx)
+    // }, projectile.timeLife)
 }
 
 function VectronicGun::activateMode(idx) {
+    idx--
     this.availablesModes[idx] = true
     this.SetMode(idx)
 }
 
 function VectronicGun::deactivateMode(idx) {
+    idx--
     if(currentMode == idx) 
         this.switchMode
 
