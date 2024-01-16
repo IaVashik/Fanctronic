@@ -81,16 +81,18 @@ function VectronicGun::switchMode() {
     local nextMode = null
     local len = this.availablesModes.len()
 
-    for (local i = 0; i < len; i++) {
+    for (local i = 1; i < len; i++) {
         local index = (startIndex + i) % len
         if (this.availablesModes[index]) {
             nextMode = index
             break
         }
     }
+    if(nextMode == null) 
+        return printl("Fanctronic: No other projectile")  // todo change to viewmodel
 
-    this.currentMode = nextMode + 1
-    printl("Fanctronic: Set " + this.currentMode + " mode :>") // todo change to viewmodel
+    this.currentMode = nextMode
+    printl("Fanctronic: Set " + (nextMode + 1) + " mode :>") // todo change to viewmodel
 }
 
 function VectronicGun::GetBall() {
