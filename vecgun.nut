@@ -33,12 +33,8 @@ function VectronicGun::Shoot() {
     if(this.currentMode == null) 
         return printl("Fanctronic: No projectile")  // todo change to viewmodel
 
-    // local start = GetPlayerEx().EyePosition() 
-    // local end = start + GetPlayerEx().EyeForwardVector() * maxDistance
-    local trace = bboxcast.TracePlayerEyes(maxDistance, null, traceSettings, this.owner, this.currentMode)
-    local start = trace.GetStartPos() 
-    local end = trace.GetHitpos()
-
+    local start = GetPlayerEx().EyePosition() 
+    local end = start + GetPlayerEx().EyeForwardVector() * maxDistance
     local projectile = this.GetBall().Shoot(start, end, this.owner)
 
     // local idx = activeProjectiles.len() // TODO

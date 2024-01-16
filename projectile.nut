@@ -61,21 +61,21 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
 
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
         local trace = bboxcast(startPos, endPos, caller, traceSettings, vecballIdx) //? vecballIdx 
-
+        
         animationDuration += projectile.moveBetween(startPos, trace.GetHitpos(), animationDuration)
 
         local hitEnt = trace.GetEntityClassname()
-        if(hitEnt == "trigger_push" || hitEnt == "prop_physics" || hitEnt == "prop_dynamic") {
+        if(hitEnt == "trigger_push" || hitEnt == "prop_physics" || hitEnt == "trigger_multiple") {
+            endPos = trace.GetHitpos()
             break 
         }
 
         local dirReflection = math.reflectVector(trace.GetDir(), trace.GetImpactNormal())
 
         local newEnd = endPos + dirReflection * maxDistance
-
-        startPos = trace.GetHitpos() //+ dirReflection * 0.1
-        endPos = bboxcast(trace.GetHitpos(), newEnd).GetHitpos()
-
+        endPos = bboxcast._TraceEnd(trace.GetHitpos(), newEnd) //
+        startPos = trace.GetHitpos() + trace.GetImpactNormal()
+        
         if(recursion != recursionDepth - 1) {
             CreateScheduleEvent(eventName, function():(particleEnt, recursion) {
                 particleEnt.EmitSound("ParticleBall.Impact")
