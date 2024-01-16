@@ -57,7 +57,7 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
 
     local projectile = launchedProjectile(particleEnt, eventName, this.type)
     local animationDuration = 0 
-    // local vecballIdx = projectileModes.search(this)
+    local vecballIdx = projectileModes.search(this)
 
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
         animationDuration += projectile.moveBetween(startPos, endPos, animationDuration)
@@ -68,7 +68,7 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
         if(bounceSurface || physObject)
             break 
 
-        local trace = bboxcast(startPos, endPos, caller)
+        local trace = bboxcast(startPos, endPos, caller, traceSettings, vecballIdx)
         local dirReflection = math.reflectVector(trace.GetDir(), trace.GetImpactNormal())
 
         local newEnd = endPos + dirReflection * maxDistance

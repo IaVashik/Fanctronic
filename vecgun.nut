@@ -35,7 +35,7 @@ function VectronicGun::Shoot() {
 
     // local start = GetPlayerEx().EyePosition() 
     // local end = start + GetPlayerEx().EyeForwardVector() * maxDistance
-    local trace = bboxcast.TracePlayerEyes(maxDistance, null, 111, defaultSettings, this.owner)
+    local trace = bboxcast.TracePlayerEyes(maxDistance, null, traceSettings, this.owner, this.currentMode)
     local start = trace.GetStartPos() 
     local end = trace.GetHitpos()
 
