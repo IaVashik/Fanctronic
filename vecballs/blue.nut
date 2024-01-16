@@ -1,5 +1,8 @@
-local blue = vecProjectile("blue", "138 206 247")
+local blue = vecProjectile("blue", "123 124 193") // 183 237 242
 blue.addHandleFunc(function(cargo) : (blue) {
+    if(cargo.IsValid() == false) 
+        return
+        
     if(cargo.GetModeType() == "blue") {
         cargo.EnableGravity()
         cargo.ResetMode()

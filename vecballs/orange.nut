@@ -1,10 +1,13 @@
-local orange = vecProjectile("orange", "255 200 0")
+local orange = vecProjectile("orange", "193 183 123")
 orange.addHandleFunc(function(cargo) : (orange) {
-    // if(cargo.GetUserData("CurrentMode") == "green") {
-    //     cargo.GetUserData("Clone").Destroy()
-    // }
+    if(cargo.IsValid() == false) 
+        return
+    
     if(cargo.GetModeType() == "blue") {
         cargo.EnableGravity()
+    }
+    if(cargo.GetModeType() == "green") {
+        cargo.GetGhost().Destroy()
     }
 
     cargo.SetMode(orange)
