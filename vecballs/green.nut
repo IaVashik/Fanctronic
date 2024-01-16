@@ -1,17 +1,17 @@
 local green = vecProjectile("green", "172 235 174")
 green.addHandleFunc(function(cargo) : (green) {
-    if(cargo.IsValid() == false) 
-        return
-    
-    if(cargo.GetModeType() == "blue") {
-        cargo.EnableGravity()
-    }
-    if(cargo.GetModeType() == "green") {
-        cargo.GetGhost().Destroy()
+    if(cargo.GetModeType() != null) {
+        cargo.ResetModes()
     }
 
     cargo.SetMode(green)
     cargo.CreateGhost()
+})
+
+green.addRemoverFunc(function(cargo) {
+    local ghost = cargo.GetGhost()
+    if(ghost && ghost.IsValid()) 
+        ghost.Destroy()
 })
 
 projectileModes.append(green)

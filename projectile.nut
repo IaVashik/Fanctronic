@@ -1,9 +1,10 @@
 class vecProjectile {
-    particleMaker = null;   // черт, а их ведь теперь надо динамически создавать, нужен спавнер!
+    particleMaker = null;
     type = null;
     color = null;
+
     handleHitFunc = null;
-    dispancersList = null;
+    removeEffectsFunc = null;
 
     constructor(type, color, handleFunc = null) {
         this.color = color
@@ -11,18 +12,17 @@ class vecProjectile {
         this.handleHitFunc = handleFunc
 
         this.particleMaker = entLib.FindByName("@" + type + "-projectile-spawn")
-        this.dispancersList = arrayLib.new()
 
         entLib.FindByName("@" + type + "-colorPoint").SetOrigin(StrToVec(color))
     }
 
     function addHandleFunc(func) null
+    function addRemoverFunc(func) null
+    function cargoRemoveEffects(cargo) null
 
     function GetStatus() bool
     function GetType() string
     function GetColor() string
-    function GetDispancers() arrayLib
-    function appendDispancer(ent) null
     
     function Shoot(startPos, endPos, caller = GetPlayer()) null
     function playParticle(particleName, originPos) pcapEnt
@@ -35,20 +35,20 @@ function vecProjectile::addHandleFunc(func) {
     this.handleHitFunc = func
 }
 
+function vecProjectile::addRemoverFunc(func) {
+    this.removeEffectsFunc = func
+}
+
+function vecProjectile::cargoRemoveEffects(cargo) {
+    this.removeEffectsFunc(cargo)
+}
+
 function vecProjectile::GetType() {
     return this.type
 }
 
 function vecProjectile::GetColor() {
     return this.color
-}
-
-function vecProjectile::appendDispancer(ent) {
-    this.dispancersList.append(ent)
-}
-
-function vecProjectile::GetDispancers() {
-    return this.dispancersList
 }
 
 function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
@@ -90,7 +90,8 @@ function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
 
     local hitFunc = function() : (endPos, handleHitFunc) {        
         local cargo = entLib.FindByModelWithin("models/props/puzzlebox.mdl", endPos, 25)
-        if(!cargo) return
+        if(!cargo || cargo.IsValid() == false) 
+            return
 
         handleHitFunc(vecBox(cargo))
         cargo.EmitSound("VecBox.Activate")

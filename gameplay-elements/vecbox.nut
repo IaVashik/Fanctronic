@@ -1,8 +1,6 @@
 ::vecBox <- class extends pcapEntity {
-    CurrentMode = null;
-
     function SetMode(type) null
-    function ResetMode() null
+    function ResetModes() null
     function GetMode() vecProjectile
     function GetModeType() string
 
@@ -17,20 +15,20 @@
 
 function vecBox::SetMode(type) {
     this.SetUserData("ActivatedMode", type)
-    this.CurrentMode = type;
 
     type.playParticle("vecbox", this.GetOrigin())
     this.SetColor(type.color)
 }
 
-function vecBox::ResetMode() {
-    this.SetUserData("ActivatedMode", null)
-    this.CurrentMode = null;
-    
-    for(mode in projectileModes) {
-        mode.cargoClear(this)
+function vecBox::ResetModes() {
+    local currentMode = this.GetMode()
+
+    foreach(mode in projectileModes) {
+        if(mode == currentMode)
+            mode.cargoRemoveEffects(this)
     }
 
+    this.SetUserData("ActivatedMode", null)
     this.SetColor("255 255 255")
 }
 
