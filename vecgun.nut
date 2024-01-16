@@ -4,11 +4,19 @@ class VectronicGun {
     currentMode = null;
     availablesModes = null;
     activeProjectiles = null;
+    usedDispancer = null;
 
     constructor(player) {
-        this.availablesModes = array(projectileModes.len(), false)
+        local vecballCount = projectileModes.len()
+
+        this.availablesModes = array(vecballCount, false)
         this.owner = player;
         this.activeProjectiles = arrayLib.new()
+
+        this.usedDispancer = arrayLib.new()
+        for(local i = 0; i < vecballCount; i++) {
+            this.usedDispancer.append(arrayLib.new())
+        }
     }
 
     function Shoot() null
@@ -20,35 +28,46 @@ class VectronicGun {
     function GetBall() null
 }
 
+
 function VectronicGun::Shoot() {
     if(this.currentMode == null) 
         return printl("Fanctronic: No projectile")  // todo change to viewmodel
 
-    local trace = bboxcast.TracePlayerEyes(maxDistance, null, defaultSettings, this.owner)
+    // local start = GetPlayerEx().EyePosition() 
+    // local end = start + GetPlayerEx().EyeForwardVector() * maxDistance
+    local trace = bboxcast.TracePlayerEyes(maxDistance, null, 111, defaultSettings, this.owner)
     local start = trace.GetStartPos() 
-    local hit = trace.GetHitpos()
+    local end = trace.GetHitpos()
 
-    local projectile = this.GetBall().Shoot(start, hit, this.owner)
+    local projectile = this.GetBall().Shoot(start, end, this.owner)
 
-    // local idx = activeProjectiles.len()
+    // local idx = activeProjectiles.len() // TODO
     // activeProjectiles.append(projectile)
     // CreateScheduleEvent(projectile.eventName, function() : (activeProjectiles, idx) {
     //     activeProjectiles.remove(idx)
     // }, projectile.timeLife)
 }
 
-function VectronicGun::activateMode(idx) {
-    idx--
+function VectronicGun::activateMode(idx, dispancer = null) {
+    idx = (idx - 1) % this.availablesModes.len() 
     this.availablesModes[idx] = true
     this.SetMode(idx)
+    this.owner.EmitSound("Weapon_VecGun.Upgrade")
+
+    if(dispancer) {
+        this.usedDispancer[idx].append(dispancer)
+    }
 }
 
 function VectronicGun::deactivateMode(idx) {
-    idx--
-    if(currentMode == idx) 
-        this.switchMode
+    idx -= 1
+
+    if(availablesModes[idx] == false)
+        return dev.log("This mode has already been deactivated: " + idx)
 
     this.availablesModes[idx] = false
+    if(currentMode == idx) 
+        this.switchMode()
     
     local type = projectileModes[idx].GetType()
     foreach(idx, ball in this.activeProjectiles){
@@ -57,6 +76,12 @@ function VectronicGun::deactivateMode(idx) {
             this.activeProjectiles.remove(idx)
         }
     }
+
+    local dispancers = this.usedDispancer[idx]
+    foreach(dispancer in dispancers){
+        EntFireByHandle(dispancer, "FireUser1")
+    }
+    dispancers.clear()
 }
 
 function VectronicGun::SetMode(idx) {
@@ -65,12 +90,28 @@ function VectronicGun::SetMode(idx) {
 }
 
 function VectronicGun::resetModes() {
-    this.availablesModes.apply(function(idx) : (activeProjectiles) {
-        activeProjectiles[value].Destroy()
-        return false
-    });
+    if(this.currentMode == null)
+        return
+
     this.currentMode = null
-    this.activeProjectile.clear()
+
+    foreach(idx, key in this.availablesModes){
+        key = false
+    }
+
+    foreach(projectile in this.activeProjectiles){
+        projectile.Destroy()
+    }
+    this.activeProjectiles.clear()
+
+    foreach(dispancers in this.usedDispancer){
+        foreach(dispancer in dispancers){
+            EntFireByHandle(dispancer, "FireUser1")
+        }
+        dispancers.clear()
+    }
+    
+    this.owner.EmitSound("Weapon_VecGun.Fizzle")
 }
 
 function VectronicGun::switchMode() {
@@ -88,10 +129,17 @@ function VectronicGun::switchMode() {
             break
         }
     }
-    if(nextMode == null) 
-        return printl("Fanctronic: No other projectile")  // todo change to viewmodel
+    if(nextMode == null) {
+        if(this.availablesModes[startIndex] == false) {
+            return this.currentMode = null
+        }
+        else return printl("Fanctronic: No other projectile")  // todo change to viewmodel
+    }
+        
+    
 
     this.currentMode = nextMode
+    this.owner.EmitSound("Weapon_Vecgun.Change")
     printl("Fanctronic: Set " + (nextMode + 1) + " mode :>") // todo change to viewmodel
 }
 
