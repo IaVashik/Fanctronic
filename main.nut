@@ -8,13 +8,24 @@ IncludeScript("Fanctronic/vecgun")
 IncludeScript("Fanctronic/gameplay-elements/vecbox")
 IncludeScript("Fanctronic/gameplay-elements/dispenser")
 IncludeScript("Fanctronic/gameplay-elements/ballshot")
+IncludeScript("Fanctronic/gameplay-elements/fizzler")
 
 
 const maxDistance = 3000
 const projectileSpeed = 16.6 // units per frame
 const recursionDepth = 8
 const maxProjectilesOnMap = 10
-
+::traceSettings <- { 
+    ignoreClass = arrayLib.new("info_target", "viewmodel", "weapon_", "func_illusionary", "info_particle_system",
+    "trigger_", "phys_", "env_sprite", "point_", "vgui_", "physicsclonearea", "env_beam", "func_breakable"),
+    priorityClass = arrayLib.new("trigger_push"),
+    customFilter = function(ent, ballType) {
+        if(ent.GetClassname() != "trigger_multiple") 
+            return false
+        return ent.GetHealth() == ballType + 1 || ent.GetHealth() != 999    // TODO можно индексы на GetUserData заменить
+    },
+    ErrorCoefficient = 500,
+}
 
 vecgunOwners <- {}
 
@@ -40,7 +51,14 @@ for(local player; player = Entities.FindByClassname(player, "player");) {
 }
 
 Precache("VecLauncher.Fire")
+Precache("Weapon_VecGun.Upgrade")
+Precache("Weapon_Vecgun.Change")
+Precache("Weapon_VecGun.Fizzle")
 Precache("VecBox.Activate")
+Precache("VecBox.Deactivate")
 Precache("ParticleBall.Impact")
+Precache("VecBox.ClearShield")
+Precache("ParticleBall.Explosion")
 // Precache("ParticleBall.AmbientLoop")
+
 EntFireByHandle(self, "runscriptcode", "SendToConsole(\"sv_alternateticks 0\")", 1, null, null)
