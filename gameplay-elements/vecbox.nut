@@ -22,20 +22,20 @@ function vecBox::SetMode(type) {
     this.EmitSound("VecBox.Activate")
 }
 
-function vecBox::DeactivateMode() {
+function vecBox::DeactivateMode(hardReset = false) {
     if(this.GetMode() == null)
         return
     
-    this.ResetModes()
+    this.ResetModes(hardReset)
     this.EmitSound("VecBox.Deactivate")
     defaultVecball.playParticle("vecbox", this.GetOrigin())
 }
 
-function vecBox::ResetModes() {
+function vecBox::ResetModes(hardReset = false) {
     local currentMode = this.GetMode()
 
     foreach(mode in projectileModes) {
-        if(mode == currentMode)
+        if(mode == currentMode || hardReset)
             mode.cargoRemoveEffects(this)
     }
 
