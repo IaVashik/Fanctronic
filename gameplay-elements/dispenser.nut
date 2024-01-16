@@ -1,5 +1,5 @@
 function initDispancer(mode) {
-    local ballMode = projectileModes[mode - 1]
+    local ballMode = projectileModes[(mode - 1) % projectileModes.len()]
     local dispancer = entLib.FromEntity(caller)
     local prefix = dispancer.GetNamePrefix()
 
@@ -10,7 +10,7 @@ function initDispancer(mode) {
     local vecballPoint = entLib.FindByName(prefix + "dispenser_vecball")
 
     local colorPrefix = "@" + ballMode.GetType() + "-"
-    printl(colorPrefix + "dispancer-spawn")
+
     entLib.FindByName(colorPrefix + "dispancer-spawn").SpawnEntity()
     local baseFX = entLib.FindByName(colorPrefix + "dispancer-base")
     local coreFX = entLib.FindByName(colorPrefix + "dispancer-core")
@@ -33,5 +33,10 @@ function initDispancer(mode) {
         EntFireByHandle(coreFX, "Start")
         EntFireByHandle(vecballFX, "Start")
     
-    ballMode.appendDispancer(dispancer)
+    // ballMode.appendDispancer(dispancer)
+}
+
+function touchDispancer(mode) {
+    local vecgun = vecgunOwners[activator]
+    vecgun.activateMode(mode, caller)
 }
