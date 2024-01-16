@@ -1,5 +1,6 @@
 ::vecBox <- class extends pcapEntity {
     function SetMode(type) null
+    function DeactivateMode() null
     function ResetModes() null
     function GetMode() vecProjectile
     function GetModeType() string
@@ -18,6 +19,16 @@ function vecBox::SetMode(type) {
 
     type.playParticle("vecbox", this.GetOrigin())
     this.SetColor(type.color)
+    this.EmitSound("VecBox.Activate")
+}
+
+function vecBox::DeactivateMode() {
+    if(this.GetMode() == null)
+        return
+    
+    this.ResetModes()
+    this.EmitSound("VecBox.Deactivate")
+    defaultVecball.playParticle("vecbox", this.GetOrigin())
 }
 
 function vecBox::ResetModes() {
