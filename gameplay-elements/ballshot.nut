@@ -10,9 +10,10 @@ function setBallshoot(mode) {
 function BallShoot() {
     caller = entLib.FromEntity(caller)
     local vecball = caller.GetUserData("vecball")
+    local vecballIdx = projectileModes.search(vecball)
 
     local start = caller.GetOrigin()
-    local trace = bboxcast(start, start + caller.GetForwardVector() * maxDistance, caller)
+    local trace = bboxcast(start, start + caller.GetForwardVector() * maxDistance, caller, vecballIdx, traceSettings)
     local hit = trace.GetHitpos()
 
     vecball.Shoot(start, hit, caller)
