@@ -60,25 +60,27 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
     local vecballIdx = projectileModes.search(this)
 
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
-        animationDuration += projectile.moveBetween(startPos, endPos, animationDuration)
+        local trace = bboxcast(startPos, endPos, caller, traceSettings, vecballIdx) //? vecballIdx 
 
-        local bounceSurface = entLib.FindByClassnameWithin("trigger_push", endPos, 2)
-        local physObject = entLib.FindByClassnameWithin("prop_physics", endPos, 25) //* как варик юзать и для hitFunc
+        animationDuration += projectile.moveBetween(startPos, trace.GetHitpos(), animationDuration)
 
-        if(bounceSurface || physObject)
+        local hitEnt = trace.GetEntityClassname()
+        if(hitEnt == "trigger_push" || hitEnt == "prop_physics" || hitEnt == "prop_dynamic") {
             break 
+        }
 
-        local trace = bboxcast(startPos, endPos, caller, traceSettings, vecballIdx)
         local dirReflection = math.reflectVector(trace.GetDir(), trace.GetImpactNormal())
 
         local newEnd = endPos + dirReflection * maxDistance
 
-        startPos = trace.GetHitpos() + dirReflection * 0.1
-        endPos = bboxcast(startPos, newEnd).GetHitpos()
+        startPos = trace.GetHitpos() //+ dirReflection * 0.1
+        endPos = bboxcast(trace.GetHitpos(), newEnd).GetHitpos()
 
-        CreateScheduleEvent(eventName, function():(particleEnt) {
-            particleEnt.EmitSound("ParticleBall.Impact")
-        }, animationDuration)
+        if(recursion != recursionDepth - 1) {
+            CreateScheduleEvent(eventName, function():(particleEnt, recursion) {
+                particleEnt.EmitSound("ParticleBall.Impact")
+            }, animationDuration)
+        }
     }
 
     caller.EmitSound("VecLauncher.Fire")
