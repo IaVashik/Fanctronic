@@ -26,7 +26,10 @@ function giveVecGun(player) {
     gameui.ConnectOutputEx("PressedAttack", function() : (vecgun) {
         vecgun.Shoot()
     })
-    vecgun.activateMode(1)
+    gameui.ConnectOutputEx("PressedAttack2", function() : (vecgun) {
+        vecgun.switchMode()
+    })
+
     EntFireByHandle(gameui, "Activate", "", 0, player)
 }
 
