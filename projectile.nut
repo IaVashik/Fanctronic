@@ -28,6 +28,7 @@ class vecProjectile {
     function playParticle(particleName, originPos) pcapEnt
 
     function __createProjectile() null
+    function _tostring() return "vecProjectile: " + type
 }
 
 
