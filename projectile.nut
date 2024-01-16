@@ -51,14 +51,14 @@ function vecProjectile::GetColor() {
     return this.color
 }
 
-function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
+function vecProjectile::Shoot(startPos, endPos, caller) {
     local eventName = UniqueString("activeProjectile")
     local particleEnt = this.__createProjectile()
 
     local projectile = launchedProjectile(particleEnt, eventName, this.type)
     local animationDuration = 0 
+    // local vecballIdx = projectileModes.search(this)
 
-    // todo comment -----
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
         animationDuration += projectile.moveBetween(startPos, endPos, animationDuration)
 
@@ -88,13 +88,12 @@ function vecProjectile::Shoot(startPos, endPos, caller = GetPlayer()) {
     EntFireByHandle(particleEnt, "Stop", "", animationDuration)
     EntFireByHandle(particleEnt, "kill", "", animationDuration + 1) // TODO надо наверное destroy вызывать
 
-    local hitFunc = function() : (endPos, handleHitFunc) {        
+    local hitFunc = function() : (endPos, handleHitFunc, particleEnt) {
         local cargo = entLib.FindByModelWithin("models/props/puzzlebox.mdl", endPos, 25)
         if(!cargo || cargo.IsValid() == false) 
-            return
+            return particleEnt.EmitSound("ParticleBall.Explosion")
 
         handleHitFunc(vecBox(cargo))
-        cargo.EmitSound("VecBox.Activate")
     }
     CreateScheduleEvent(eventName, hitFunc, animationDuration)
 
