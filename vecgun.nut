@@ -37,11 +37,7 @@ function VectronicGun::Shoot() {
     local end = start + GetPlayerEx().EyeForwardVector() * maxDistance
     local projectile = this.GetBall().Shoot(start, end, this.owner)
 
-    // local idx = activeProjectiles.len() // TODO
-    // activeProjectiles.append(projectile)
-    // CreateScheduleEvent(projectile.eventName, function() : (activeProjectiles, idx) {
-    //     activeProjectiles.remove(idx)
-    // }, projectile.timeLife)
+    this.activeProjectiles.append(projectile)
 }
 
 function VectronicGun::activateMode(idx, dispancer = null) {
@@ -66,10 +62,18 @@ function VectronicGun::deactivateMode(idx) {
         this.switchMode()
     
     local type = projectileModes[idx].GetType()
-    foreach(idx, ball in this.activeProjectiles){
+    for(local idx = 0; idx < this.activeProjectiles.len(); idx++) { // Oh no, junk code :<
+        local ball = this.activeProjectiles[idx]
+        if(ball.IsValid() == false) {
+            this.activeProjectiles.remove(idx)
+            idx--
+            continue
+        }
+
         if(ball.GetType() == type) {
             ball.Destroy()
             this.activeProjectiles.remove(idx)
+            idx--
         }
     }
 
