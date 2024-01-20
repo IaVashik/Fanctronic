@@ -24,7 +24,7 @@ class vecProjectile {
     function GetType() string
     function GetColor() string
     
-    function Shoot(startPos, endPos, caller = GetPlayer()) null
+    function Shoot(startPos, endPos, caller) null
     function playParticle(particleName, originPos) pcapEnt
 
     function __createProjectile() null
@@ -58,11 +58,11 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
 
     local projectile = launchedProjectile(particleEnt, eventName, this.type)
     local animationDuration = 0 
-    local vecballIdx = projectileModes.search(this)
+    local vecballIdx = projectileModes.search(this) + 1
 
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
         local trace = bboxcast(startPos, endPos, caller, traceSettings, vecballIdx) //? vecballIdx 
-        
+
         animationDuration += projectile.moveBetween(startPos, trace.GetHitpos(), animationDuration)
 
         local hitEnt = trace.GetEntityClassname()
@@ -132,31 +132,28 @@ function vecProjectile::__createProjectile() {
     type = null;
     timeLife = 0;
 
-    __countIndex = 0;
-
     constructor(particleEnt, eventName, type) {
         this.particleEnt = particleEnt
         this.eventName = eventName
         this.type = type
 
-        // An optional functionality, created purely for the sake of optimization       
+        // An optional functionality, created purely for the sake of optimization // TODO add delay and delete
         if(::projectileCount.len() > maxProjectilesOnMap) {
             if(::projectileCount[0].IsValid()) 
                 ::projectileCount[0].Destroy()
             ::projectileCount.remove(0)
         }
-        this.__countIndex = ::projectileCount.len()
         ::projectileCount.append(this)
     }
 
     function Destroy() {
+        if(this.IsValid() == false) return
         cancelScheduledEvent(eventName)
         particleEnt.Destroy()
-        ::projectileCount.remove(this.__countIndex)
     }
 
     function IsValid() {
-        return eventIsValid(eventName) && particleEnt.IsValid()
+        return eventIsValid(this.eventName) && particleEnt.IsValid()
     }
 
     function moveBetween(startPos, endPos, delay = 0) {

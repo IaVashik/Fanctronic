@@ -1,4 +1,4 @@
-local blue = vecProjectile("blue", "183 237 242") // 183 237 242
+local blue = vecProjectile("blue", "135 213 212") // 143 229 226
 blue.addHandleFunc(function(cargo) : (blue) {
     if(cargo.GetModeType() == "blue") {
         return cargo.DeactivateMode()

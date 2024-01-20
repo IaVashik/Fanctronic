@@ -1,1 +1,1 @@
-::defaultVecball <- vecProjectile("gray", "125 125 125")
+::defaultVecball <- vecProjectile("gray", "200 200 200")

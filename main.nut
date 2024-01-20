@@ -22,8 +22,8 @@ const maxProjectilesOnMap = 10
     customFilter = function(ent, ballType) {
         if(ent.GetClassname() != "trigger_multiple") 
             return false
-        // fprint("ent: {}, health: {}. ballType: {}; RESULT: {}", ent, ent.GetHealth(), ballType, (ent.GetHealth() == ballType + 1))
-        return ent.GetHealth() == ballType + 1 || ent.GetHealth() == 999    // TODO можно индексы на GetUserData заменить
+        // fprint("ent: {}, health: {}. ballType: {}; RESULT: {}", ent, ent.GetHealth(), ballType, (ent.GetHealth() == ballType))
+        return ent.GetHealth() == ballType || ent.GetHealth() == 999    // TODO можно индексы на GetUserData заменить
     },
     ErrorCoefficient = 500,
 }
