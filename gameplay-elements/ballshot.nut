@@ -21,9 +21,8 @@ function setBallshoot(mode) {
 function BallShoot() {
     caller = entLib.FromEntity(caller)
     local vecball = caller.GetUserData("vecball")
-    local vecballIdx = projectileModes.search(vecball)
 
-    local start = caller.GetOrigin()
+    local start = caller.GetOrigin() + caller.GetForwardVector() * 30
     local end = start + caller.GetForwardVector() * maxDistance
 
     vecball.Shoot(start, end, caller)
