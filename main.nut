@@ -16,16 +16,16 @@ const projectileSpeed = 16.6 // units per frame
 const recursionDepth = 8
 const maxProjectilesOnMap = 10
 ::traceSettings <- { 
-    ignoreClass = arrayLib.new("info_target", "viewmodel", "weapon_", "func_illusionary", "info_particle_system",
-    "trigger_", "phys_", "env_sprite", "point_", "vgui_", "physicsclonearea", "env_beam", "func_breakable"),
-    priorityClass = arrayLib.new("trigger_push"),
+    ignoreClass = arrayLib.new("info_target", "viewmodel", "weapon_", "info_particle_system",
+    "trigger_", "phys_", "env_", "point_", "vgui_", "physicsclonearea", "func_door", "func_instance_io_proxy"),
+    priorityClass = arrayLib.new("trigger_gravity"),
     customFilter = function(ent, ballType) {
         if(ent.GetClassname() != "trigger_multiple") 
             return false
         // fprint("ent: {}, health: {}. ballType: {}; RESULT: {}", ent, ent.GetHealth(), ballType, (ent.GetHealth() == ballType))
         return ent.GetHealth() == ballType || ent.GetHealth() == 999    // TODO можно индексы на GetUserData заменить
     },
-    ErrorCoefficient = 500,
+    ErrorCoefficient = 2000,
 }
 
 vecgunOwners <- {}

@@ -62,11 +62,10 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
 
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
         local trace = bboxcast(startPos, endPos, caller, traceSettings, vecballIdx) //? vecballIdx 
-
         animationDuration += projectile.moveBetween(startPos, trace.GetHitpos(), animationDuration)
 
-        local hitEnt = trace.GetEntityClassname()
-        if(hitEnt == "trigger_push" || hitEnt == "prop_physics" || hitEnt == "trigger_multiple") {
+            local hitEnt = trace.GetEntityClassname()
+        if(hitEnt == "trigger_gravity" || hitEnt == "prop_physics" || hitEnt == "trigger_multiple") {
             endPos = trace.GetHitpos()
             break 
         }
