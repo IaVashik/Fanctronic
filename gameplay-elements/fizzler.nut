@@ -7,9 +7,8 @@ local _cubeFizzle = function(cargo, hardReset = false) {
     if(cargo.GetMode() == null)
         return
 
-    cargo.ResetModes(hardReset) 
+    cargo.DeactivateMode(hardReset)
     cargo.EmitSound("VecBox.ClearShield")
-    defaultVecball.playParticle("vecbox", cargo.GetOrigin())
 }
 
 

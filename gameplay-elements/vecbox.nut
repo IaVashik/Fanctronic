@@ -18,7 +18,8 @@ function vecBox::SetMode(type) {
     this.SetUserData("ActivatedMode", type)
 
     type.playParticle("vecbox", this.GetOrigin())
-    this.SetColor(type.color)
+
+    animate.ColorTransition(this, this.GetColor(), type.color, 0.3, {eventName = this.CBaseEntity})
     this.EmitSound("VecBox.Activate")
 }
 
@@ -27,6 +28,7 @@ function vecBox::DeactivateMode(hardReset = false) {
         return
     
     this.ResetModes(hardReset)
+    animate.ColorTransition(this, this.GetColor(), "255 255 255", 0.5, {eventName = this.CBaseEntity})
     this.EmitSound("VecBox.Deactivate")
     defaultVecball.playParticle("vecbox", this.GetOrigin())
 }
@@ -40,7 +42,6 @@ function vecBox::ResetModes(hardReset = false) {
     }
 
     this.SetUserData("ActivatedMode", null)
-    this.SetColor("255 255 255")
 }
 
 function vecBox::GetMode() {
@@ -76,12 +77,13 @@ function vecBox::CreateGhost() {
     entLib.FindByName("@green_spawn").SpawnEntity()
     local ghost = entLib.FindByName("@ghost-cube")
 
-    ghost.SetName(UniqueString())
+    ghost.SetUniqueName()
 
     ghost.SetOrigin(this.GetOrigin())
     ghost.SetAbsAngles(this.GetAngles())
     ghost.SetColor(this.GetMode().GetColor())
     ghost.SetCollisionGroup(12)
+    animate.AlphaTransition(ghost, 0, 255, 0.15)
 
     local workaround = entLib.FindByClassnameWithin("trigger_multiple", this.GetOrigin(), 1)
     workaround.addOutput("OnEndTouchAll", ghost, "AddOutput", "CollisionGroup 24")

@@ -10,9 +10,8 @@ purple.addHandleFunc(function(cargo) : (purple) {
     local eventName = cargo.CBaseEntity
 
     RunScriptCode.recursive(function():(cargo, thisColor, activateColor, eventName) {
-        animate.ColorTransition(cargo, thisColor, activateColor, 1, {eventName = eventName, outputs = function():(cargo, thisColor, activateColor, eventName) {
-            animate.ColorTransition(cargo, activateColor, thisColor, 1, {eventName = eventName})
-        }})
+        animate.ColorTransition(cargo, thisColor, activateColor, 1, {eventName = eventName})
+        animate.ColorTransition(cargo, activateColor, thisColor, 1, {eventName = eventName, globalDelay = 1})
     }, 2, 1, eventName)
     
     
