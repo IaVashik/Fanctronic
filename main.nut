@@ -2,6 +2,7 @@
 IncludeScript("pcapture-lib/PCapture-Lib.nut") // TODO
 
 IncludeScript("Fanctronic/projectile")
+IncludeScript("Fanctronic/hit-controller")
 IncludeScript("Fanctronic/vecballs/main")
 IncludeScript("Fanctronic/vecgun")
 
