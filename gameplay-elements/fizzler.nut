@@ -15,6 +15,8 @@ local _cubeFizzle = function(cargo, hardReset = false) {
 function vecFizzle(modeIdx = null) : (_playerFizzle, _cubeFizzle) {
     if(modeIdx == null)
         modeIdx = caller.GetHealth()
+    if(modeIdx == 999)
+        return vecFizzleAll()
         
     if(activator.GetClassname() == "player") 
         return _playerFizzle(modeIdx)
