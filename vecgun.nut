@@ -99,8 +99,8 @@ function VectronicGun::resetModes() {
 
     this.currentMode = null
 
-    foreach(idx, key in this.availablesModes){
-        key = false
+    foreach(idx, _ in this.availablesModes){ // TODO make to for
+        availablesModes[idx] = false
     }
 
     foreach(projectile in this.activeProjectiles){
