@@ -60,8 +60,8 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
     local particleEnt = this._createProjectileParticle()
 
     local projectile = launchedProjectile(particleEnt, eventName, this)
-    local animationDuration = 0 
-    local vecballIdx = projectileModes.search(this) + 1
+    local animationDuration = 0  
+    local vecballIdx = projectileModes.search(this) + 1 //? vecballIdx 
 
     //? вынести?
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
@@ -69,7 +69,7 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
         animationDuration += projectile.moveBetween(startPos, trace.GetHitpos(), animationDuration)
 
         local hitEnt = trace.GetEntityClassname()
-        if(hitEnt == "trigger_gravity" || hitEnt == "prop_physics" || hitEnt == "trigger_multiple") {
+        if(recursion == recursionDepth - 1 || hitEnt == "trigger_gravity" || hitEnt == "prop_physics") {
             endPos = trace.GetHitpos()
             break 
         }
@@ -81,19 +81,13 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
         startPos = trace.GetHitpos() + trace.GetImpactNormal()
         
         //? вынести?
-        if(recursion != recursionDepth - 1) {
-            CreateScheduleEvent(eventName, function():(particleEnt) {
-                particleEnt.EmitSound("ParticleBall.Impact")
-            }, animationDuration)
-        }
+        particleEnt.EmitSoundEx("ParticleBall.Impact", animationDuration)
     }
 
     caller.EmitSound("VecLauncher.Fire")
-    projectile.timeLife = animationDuration //? for what?
 
-    EntFireByHandle(particleEnt, "Start")
     EntFireByHandle(particleEnt, "Stop", "", animationDuration)
-    EntFireByHandle(particleEnt, "kill", "", animationDuration + 1) // TODO надо наверное destroy вызывать
+    EntFireByHandle(particleEnt, "kill", "", animationDuration + 1)
 
     //? вынести?
     local hitFunc = function() : (endPos, handleHitFunc, particleEnt) {
@@ -125,6 +119,7 @@ function vecProjectile::_createProjectileParticle() {
     local particle = entLib.FindByName(prefix + "projectile")
 
     particle.SetName(this.type)
+    EntFireByHandle(particle, "Start")
     return particle
 }
 
