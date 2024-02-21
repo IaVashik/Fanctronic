@@ -5,6 +5,11 @@
     function GetMode() vecProjectile
     function GetModeType() string
 
+    function ShouldHardReset() bool
+    function ShouldIgnoreVecBalls() bool
+    function EnableHardReset() null
+    function EnableIgnoreVecBalls() null
+    
     function DisableGravity() null
     function EnableGravity() null
 
@@ -16,8 +21,8 @@
 
 function vecBox::SetMode(type) {
     this.SetUserData("ActivatedMode", type)
-    // local vecballIdx = projectileModes.search(type) + 1
-    // this.SetHealth(vecballIdx)
+    // For filters
+    this.SetContext(type.GetType(), 1)
 
     type.playParticle("vecbox", this.GetOrigin())
 
@@ -30,22 +35,45 @@ function vecBox::DeactivateMode(hardReset = false) {
         return
     
     this.ResetModes(hardReset)
-    animate.ColorTransition(this, this.GetColor(), "255 255 255", 0.5, {eventName = this.CBaseEntity})
+    animate.ColorTransition(this, this.GetColor(), "255 255 255", 0.5, {eventName = this.CBaseEntity}) // TODO hard code?
     this.EmitSound("VecBox.Deactivate")
     defaultVecball.playParticle("vecbox", this.GetOrigin())
 }
 
 function vecBox::ResetModes(hardReset = false) {
     local currentMode = this.GetMode()
-    // this.SetHealth(0)
 
     foreach(mode in projectileModes) {
-        if(mode == currentMode || hardReset)
+        if(mode == currentMode || hardReset) {
             mode.cargoRemoveEffects(this)
+            this.SetContext(mode.GetType(), 0)
+        }
     }
 
+    // TODO hard code?
     this.SetUserData("ActivatedMode", null)
+    this.SetUserData("ShouldHardReset", false)
+    this.SetUserData("ShouldIgnoreVecBalls", false)
 }
+
+
+// todo
+function vecBox::ShouldHardReset() {
+    return this.GetUserData("ShouldHardReset")
+}
+
+function vecBox::ShouldIgnoreVecBalls() {
+    return this.GetUserData("ShouldIgnoreVecBalls")
+}
+
+function vecBox::EnableHardReset() {
+    this.SetUserData("ShouldHardReset", true)
+}
+
+function vecBox::EnableIgnoreVecBalls() {
+    this.SetUserData("ShouldIgnoreVecBalls", true)
+}
+
 
 function vecBox::GetMode() {
     return this.GetUserData("ActivatedMode")
