@@ -11,7 +11,3 @@ printl("Available Vecballs:")
 foreach(idx, ball in projectileModes){
     fprint("► {} [{}]", ball.GetType(), idx + 1)
 }
-
-function getVecballIdx(vecball) {
-    return projectileModes.search(vecball)
-}

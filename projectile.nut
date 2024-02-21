@@ -63,11 +63,10 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
 
     local projectile = launchedProjectile(particleEnt, eventName, this)
     local animationDuration = 0  
-    local vecballIdx = projectileModes.search(this) + 1 //? vecballIdx 
 
     //? вынести?
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
-        local trace = bboxcast(startPos, endPos, caller, traceSettings, vecballIdx) //? vecballIdx 
+        local trace = bboxcast(startPos, endPos, caller, traceSettings, this)
         animationDuration += projectile.moveBetween(startPos, trace.GetHitpos(), animationDuration)
 
         local hitEnt = trace.GetEntityClassname()

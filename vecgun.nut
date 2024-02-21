@@ -42,11 +42,15 @@ function VectronicGun::Shoot() {
 
 function VectronicGun::activateMode(idx, dispancer = null) {
     idx = (idx - 1) % this.availablesModes.len() 
+    if(this.availablesModes[idx]) 
+        return dev.log("[" + owner + "] This mode has already been activated: " + idx)
+    
     this.availablesModes[idx] = true
     this.SetMode(idx)
     this.owner.EmitSound("Weapon_VecGun.Upgrade")
 
     if(dispancer) {
+        EntFireByHandle(dispancer, "FireUser2")
         this.usedDispancer[idx].append(dispancer)
     }
 }
@@ -55,7 +59,7 @@ function VectronicGun::deactivateMode(idx) {
     idx -= 1
 
     if(availablesModes[idx] == false)
-        return dev.log("This mode has already been deactivated: " + idx)
+        return dev.log("[" + owner + "] This mode has already been deactivated: " + idx)
 
     this.availablesModes[idx] = false
     if(currentMode == idx) 

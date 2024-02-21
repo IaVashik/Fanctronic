@@ -23,8 +23,8 @@ const maxProjectilesOnMap = 10
     customFilter = function(ent, ballType) {
         if(ent.GetClassname() != "trigger_multiple") 
             return false
-        // fprint("ent: {}, health: {}. ballType: {}; RESULT: {}", ent, ent.GetHealth(), ballType, (ent.GetHealth() == ballType))
-        return ent.GetHealth() == ballType || ent.GetHealth() == 999    // TODO можно индексы на GetUserData заменить
+        local vecballIdx = projectileModes.search(ballType) + 1
+        return ent.GetHealth() == vecballIdx || ent.GetHealth() == 999
     },
     ErrorCoefficient = 2000,
 }
@@ -52,15 +52,10 @@ for(local player; player = Entities.FindByClassname(player, "player");) {
     giveVecGun(player)
 }
 
-Precache("VecLauncher.Fire")
-Precache("Weapon_VecGun.Upgrade")
-Precache("Weapon_Vecgun.Change")
-Precache("Weapon_VecGun.Fizzle")
-Precache("VecBox.Activate")
-Precache("VecBox.Deactivate")
-Precache("ParticleBall.Impact")
-Precache("VecBox.ClearShield")
-Precache("ParticleBall.Explosion")
+Precache(["VecLauncher.Fire", "Weapon_VecGun.Upgrade", "Weapon_Vecgun.Change", "Weapon_VecGun.Fizzle",
+    "VecBox.Activate", "VecBox.Deactivate", "ParticleBall.Impact", "VecBox.ClearShield", "ParticleBall.Explosion"]
+)
+
 // Precache("ParticleBall.AmbientLoop")
 
 EntFireByHandle(self, "runscriptcode", "SendToConsole(\"sv_alternateticks 0\")", 1, null, null)
