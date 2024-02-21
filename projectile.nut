@@ -59,6 +59,8 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
     local eventName = UniqueString("activeProjectile")
     local particleEnt = this._createProjectileParticle()
 
+    caller.EmitSound("VecLauncher.Fire")
+
     local projectile = launchedProjectile(particleEnt, eventName, this)
     local animationDuration = 0  
     local vecballIdx = projectileModes.search(this) + 1 //? vecballIdx 
@@ -69,7 +71,7 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
         animationDuration += projectile.moveBetween(startPos, trace.GetHitpos(), animationDuration)
 
         local hitEnt = trace.GetEntityClassname()
-        if(recursion == recursionDepth - 1 || hitEnt == "trigger_gravity" || hitEnt == "prop_physics") {
+        if(recursion == recursionDepth - 1 || hitEnt == "trigger_gravity" || hitEnt == "prop_physics" || hitEnt == "trigger_multiple") {
             endPos = trace.GetHitpos()
             break 
         }
@@ -80,16 +82,12 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
         endPos = bboxcast._TraceEnd(trace.GetHitpos(), newEnd) //
         startPos = trace.GetHitpos() + trace.GetImpactNormal()
         
-        //? вынести?
-        particleEnt.EmitSoundEx("ParticleBall.Impact", animationDuration)
+        particleEnt.EmitSoundEx("ParticleBall.Impact", animationDuration, eventName)
     }
 
-    caller.EmitSound("VecLauncher.Fire")
+    projectile.SoftKill(animationDuration)
 
-    EntFireByHandle(particleEnt, "Stop", "", animationDuration)
-    EntFireByHandle(particleEnt, "kill", "", animationDuration + 1)
-
-    //? вынести?
+    //* Основная обработка попадания vecball в куб
     local hitFunc = function() : (endPos, handleHitFunc, particleEnt) {
         local cargo = entLib.FindByModelWithin("models/props/puzzlebox.mdl", endPos, 25)
         if(!cargo || cargo.IsValid() == false) 
@@ -123,6 +121,8 @@ function vecProjectile::_createProjectileParticle() {
     return particle
 }
 
+
+
 // Storage of all launched projectile
 ::projectileCount <- []
 
@@ -140,8 +140,9 @@ function vecProjectile::_createProjectileParticle() {
 
         // An optional functionality, created purely for the sake of optimization
         if(::projectileCount.len() > maxProjectilesOnMap) {
-            if(::projectileCount[0].IsValid()) 
-                ::projectileCount[0].Destroy()
+            local oldestProjectile = ::projectileCount[0]
+            if(oldestProjectile.IsValid()) 
+                oldestProjectile.Destroy()
             ::projectileCount.remove(0)
         }
         ::projectileCount.append(this)
@@ -151,6 +152,11 @@ function vecProjectile::_createProjectileParticle() {
         if(this.IsValid() == false) return
         cancelScheduledEvent(this.eventName)
         this.particleEnt.Destroy()
+    }
+
+    function SoftKill(delay) {
+        EntFireByHandle(particleEnt, "Stop", "", delay)
+        EntFireByHandle(particleEnt, "kill", "", delay + 1)
     }
 
     function IsValid() {
