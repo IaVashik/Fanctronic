@@ -14,8 +14,8 @@ purple.addHandleFunc(function(cargo) : (purple) {
         animate.ColorTransition(cargo, activateColor, thisColor, 1, {eventName = eventName, globalDelay = 1})
     }, 2, 1, eventName)
     
-    
     cargo.SetMode(purple)
+    cargo.EnableIgnoreVecBalls()
 })
 
 purple.addRemoverFunc(function(cargo) {

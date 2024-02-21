@@ -1,11 +1,15 @@
 local green = vecProjectile("green", "172 235 174")
 green.addHandleFunc(function(cargo) : (green) {
+    if(cargo.ShouldIgnoreVecBalls()) {
+        return cargo.EmitSound("ParticleBall.Explosion")
+    }
+    
     if(cargo.GetModeType() == "green") {
         return cargo.DeactivateMode()
     }
 
     if(cargo.GetModeType() != null) {
-        cargo.ResetModes()
+        cargo.ResetModes(cargo.ShouldHardReset())
     }
 
     cargo.SetMode(green)
