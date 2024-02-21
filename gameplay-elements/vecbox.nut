@@ -16,6 +16,8 @@
 
 function vecBox::SetMode(type) {
     this.SetUserData("ActivatedMode", type)
+    // local vecballIdx = projectileModes.search(type) + 1
+    // this.SetHealth(vecballIdx)
 
     type.playParticle("vecbox", this.GetOrigin())
 
@@ -35,6 +37,7 @@ function vecBox::DeactivateMode(hardReset = false) {
 
 function vecBox::ResetModes(hardReset = false) {
     local currentMode = this.GetMode()
+    // this.SetHealth(0)
 
     foreach(mode in projectileModes) {
         if(mode == currentMode || hardReset)
