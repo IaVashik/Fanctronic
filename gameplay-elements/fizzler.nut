@@ -1,4 +1,6 @@
 local _playerFizzle = function(modeIdx) {
+    if((activator in vecgunOwners) == false) 
+        return
     local vecgun = vecgunOwners[activator]        
     vecgun.deactivateMode(modeIdx)
 }

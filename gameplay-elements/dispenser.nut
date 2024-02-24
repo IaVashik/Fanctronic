@@ -37,6 +37,8 @@ function initDispancer(mode) {
 }
 
 function touchDispancer(mode) {
+    if((activator in vecgunOwners) == false) 
+        return
     local vecgun = vecgunOwners[activator]
     vecgun.activateMode(mode, caller)
 }
