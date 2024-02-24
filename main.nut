@@ -6,6 +6,13 @@ IncludeScript("Fanctronic/hit-controller")
 IncludeScript("Fanctronic/vecballs/main")
 IncludeScript("Fanctronic/vecgun")
 
+IncludeScript("Fanctronic/event-controller/GameEvent")
+IncludeScript("Fanctronic/event-controller/EventListener")
+IncludeScript("Fanctronic/event-controller/gameevents")
+IncludeScript("Fanctronic/event-controller/hintevents")
+
+IncludeScript("Fanctronic/HUD-controller/controller")
+
 IncludeScript("Fanctronic/gameplay-elements/vecbox")
 IncludeScript("Fanctronic/gameplay-elements/dispenser")
 IncludeScript("Fanctronic/gameplay-elements/ballshot")
@@ -16,17 +23,19 @@ const maxDistance = 3000
 const projectileSpeed = 16.6 // units per frame
 const recursionDepth = 8
 const maxProjectilesOnMap = 10
+
 ::traceSettings <- { 
     ignoreClass = arrayLib.new("info_target", "viewmodel", "weapon_", "info_particle_system",
-    "trigger_", "phys_", "env_", "point_", "vgui_", "physicsclonearea", "func_door", "func_instance_io_proxy"),
+        "trigger_", "phys_", "env_", "point_", "vgui_", "physicsclonearea", "func_door", "func_instance_io_proxy"
+    ),
     priorityClass = arrayLib.new("trigger_gravity"),
+    ErrorCoefficient = 2000,
     customFilter = function(ent, ballType) {
         if(ent.GetClassname() != "trigger_multiple") 
             return false
         local vecballIdx = projectileModes.search(ballType) + 1
         return ent.GetHealth() == vecballIdx || ent.GetHealth() == 999
     },
-    ErrorCoefficient = 2000,
 }
 
 vecgunOwners <- {}
@@ -52,10 +61,6 @@ for(local player; player = Entities.FindByClassname(player, "player");) {
     giveVecGun(player)
 }
 
-Precache(["VecLauncher.Fire", "Weapon_VecGun.Upgrade", "Weapon_Vecgun.Change", "Weapon_VecGun.Fizzle",
-    "VecBox.Activate", "VecBox.Deactivate", "ParticleBall.Impact", "VecBox.ClearShield", "ParticleBall.Explosion"]
-)
-
-// Precache("ParticleBall.AmbientLoop")
-
-EntFireByHandle(self, "runscriptcode", "SendToConsole(\"sv_alternateticks 0\")", 1, null, null)
+// Sound Precache
+IncludeScript("Fanctronic/precache")
+SoundPrecache()

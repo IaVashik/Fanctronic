@@ -7,6 +7,9 @@ class VectronicGun {
     usedDispancer = null;
 
     constructor(player) {
+        if(player.GetClassname() != "player") 
+            return null
+         
         local vecballCount = projectileModes.len()
 
         this.availablesModes = array(vecballCount, false)
@@ -17,6 +20,8 @@ class VectronicGun {
         for(local i = 0; i < vecballCount; i++) {
             this.usedDispancer.append(arrayLib.new())
         }
+
+        EventListener().Notify("vecgun_powered_on", player)
     }
 
     function Shoot() null
@@ -31,13 +36,14 @@ class VectronicGun {
 
 function VectronicGun::Shoot() {
     if(this.currentMode == null) 
-        return printl("Fanctronic: No projectile")  // todo change to viewmodel
+        return EventListener().Notify("vecgun_no_projectile")
 
     local start = GetPlayerEx().EyePosition() 
     local end = start + GetPlayerEx().EyeForwardVector() * maxDistance
     local projectile = this.GetBall().Shoot(start, end, this.owner)
 
     this.activeProjectiles.append(projectile)
+    EventListener().Notify("vecgun_projectile_launched", this.currentMode)
 }
 
 function VectronicGun::activateMode(idx, dispancer = null) {
@@ -48,6 +54,7 @@ function VectronicGun::activateMode(idx, dispancer = null) {
     this.availablesModes[idx] = true
     this.SetMode(idx)
     this.owner.EmitSound("Weapon_VecGun.Upgrade")
+    EventListener().Notify("vecgun_mode_activated", idx)
 
     if(dispancer) {
         EntFireByHandle(dispancer, "FireUser2")
@@ -64,6 +71,8 @@ function VectronicGun::deactivateMode(idx) {
     this.availablesModes[idx] = false
     if(currentMode == idx) 
         this.switchMode()
+    
+    EventListener().Notify("vecgun_mode_deactivated", idx)
     
     local type = projectileModes[idx].GetType()
     for(local idx = 0; idx < this.activeProjectiles.len(); idx++) { // Oh no, junk code :<
@@ -120,7 +129,7 @@ function VectronicGun::resetModes() {
 
 function VectronicGun::switchMode() {
     if(this.currentMode == null)
-        return printl("Fanctronic: No projectile")  // todo change to viewmodel
+        return EventListener().Notify("vecgun_no_projectile")
 
     local startIndex = this.currentMode
     local nextMode = null
@@ -137,14 +146,13 @@ function VectronicGun::switchMode() {
         if(this.availablesModes[startIndex] == false) {
             return this.currentMode = null
         }
-        else return printl("Fanctronic: No other projectile")  // todo change to viewmodel
+        else return EventListener().Notify("vecgun_no_alternate_projectile")
     }
-        
     
-
+    // TODO
     this.currentMode = nextMode
     this.owner.EmitSound("Weapon_Vecgun.Change")
-    printl("Fanctronic: Set " + (nextMode + 1) + " mode :>") // todo change to viewmodel
+    EventListener().Notify("vecgun_mode_switched", nextMode)
 }
 
 function VectronicGun::GetBall() {
