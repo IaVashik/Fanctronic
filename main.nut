@@ -29,7 +29,7 @@ const maxProjectilesOnMap = 10
         "trigger_", "phys_", "env_", "point_", "vgui_", "physicsclonearea", "func_door", "func_instance_io_proxy"
     ),
     priorityClass = arrayLib.new("trigger_gravity"),
-    ErrorCoefficient = 2000,
+    ErrorCoefficient = 1000,
     customFilter = function(ent, ballType) {
         if(ent.GetClassname() != "trigger_multiple") 
             return false
