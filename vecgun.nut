@@ -1,5 +1,6 @@
 class VectronicGun {
     owner = null;
+    ownerEx = null;
 
     currentMode = null;
     availablesModes = null;
@@ -13,8 +14,10 @@ class VectronicGun {
         local vecballCount = projectileModes.len()
 
         this.availablesModes = array(vecballCount, false)
-        this.owner = player;
         this.activeProjectiles = arrayLib.new()
+        
+        this.owner = player;
+        this.ownerEx = entLib.FromEntity(player)
 
         this.usedDispancer = arrayLib.new()
         for(local i = 0; i < vecballCount; i++) {
@@ -38,8 +41,8 @@ function VectronicGun::Shoot() {
     if(this.currentMode == null) 
         return EventListener().Notify("vecgun_no_projectile")
 
-    local start = GetPlayerEx().EyePosition() 
-    local end = start + GetPlayerEx().EyeForwardVector() * maxDistance
+    local start = this.ownerEx.EyePosition() 
+    local end = start + this.ownerEx.EyeForwardVector() * maxDistance
     local projectile = this.GetBall().Shoot(start, end, this.owner)
 
     this.activeProjectiles.append(projectile)

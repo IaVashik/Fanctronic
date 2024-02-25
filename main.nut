@@ -38,9 +38,12 @@ const maxProjectilesOnMap = 10
     },
 }
 
-vecgunOwners <- {}
+::vecgunOwners <- {}
 
 function giveVecGun(player) {
+    if(player in vecgunOwners) 
+        return dev.warning(player + " already has vecgun.")
+    
     local vecgun = VectronicGun(player)
     vecgunOwners[player] <- vecgun
 

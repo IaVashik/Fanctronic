@@ -1,10 +1,12 @@
-function setBallshoot(mode) {
+local ballshotsModes = {}
+
+function setBallshoot(mode) : (ballshotsModes) {
     caller = entLib.FromEntity(caller)
     local vecball = projectileModes[mode - 1]
 
     local name = caller.GetNamePrefix() + "*"
     animate.ColorTransition(name, caller.GetColor(), vecball.GetColor(), 0.5)
-    caller.SetUserData("vecball", vecball)
+    ballshotsModes[caller] <- vecball
 
     if(caller.GetUserData("particle"))
         caller.GetUserData("particle").Destroy()
@@ -18,9 +20,9 @@ function setBallshoot(mode) {
 }
 
 
-function BallShoot() {
+function BallShoot() : (ballshotsModes) {
     caller = entLib.FromEntity(caller)
-    local vecball = caller.GetUserData("vecball")
+    local vecball = ballshotsModes[caller]
 
     local start = caller.GetOrigin() + caller.GetForwardVector() * 30
     local end = start + caller.GetForwardVector() * maxDistance

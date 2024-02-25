@@ -35,7 +35,8 @@ function vecFizzle(modeIdx = null) : (_playerFizzle, _cubeFizzle) {
 
 function vecFizzleAll() : (_cubeFizzle) {
     if(activator.GetClassname() == "player") 
-        return vecgunOwners[activator].resetModes()
+        if(activator in vecgunOwners)
+            return vecgunOwners[activator].resetModes()
 
     local cargo = vecBox(activator)
     if(cargo.GetModeType() == "purple") // hardcode
