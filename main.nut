@@ -23,6 +23,7 @@ const maxDistance = 3000
 const projectileSpeed = 16.6 // units per frame
 const recursionDepth = 8
 const maxProjectilesOnMap = 10
+const vecgunShootDelay = 0
 
 ::traceSettings <- { 
     ignoreClass = arrayLib.new("info_target", "viewmodel", "weapon_", "info_particle_system",

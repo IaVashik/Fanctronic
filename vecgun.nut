@@ -7,6 +7,8 @@ class VectronicGun {
     activeProjectiles = null;
     usedDispancer = null;
 
+    lastShoot = 0;
+
     constructor(player) {
         if(player.GetClassname() != "player") 
             return null
@@ -40,12 +42,15 @@ class VectronicGun {
 function VectronicGun::Shoot() {
     if(this.currentMode == null) 
         return EventListener().Notify("vecgun_no_projectile")
+    if(Time() < this.lastShoot + vecgunShootDelay)
+        return EventListener().Notify("vecgun_recharge")
 
     local start = this.ownerEx.EyePosition() 
     local end = start + this.ownerEx.EyeForwardVector() * maxDistance
     local projectile = this.GetBall().Shoot(start, end, this.owner)
 
     this.activeProjectiles.append(projectile)
+    this.lastShoot = Time()
     EventListener().Notify("vecgun_projectile_launched", this.currentMode)
 }
 

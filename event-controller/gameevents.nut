@@ -36,6 +36,13 @@ noProjectileAvailable.SetAction(function(_) {
 
 
 // TODO comment
+local reCharge = GameEvent("vecgun_recharge")
+reCharge.SetAction(function(_) {
+    dev.customPrint("Recharging now...")  // todo change to HUD? Sound? Idk
+})
+
+
+// TODO comment
 local modeSwitched = GameEvent("vecgun_mode_switched")
 modeSwitched.SetAction(function(modeIdx) {
     dev.customPrint("Set " + (modeIdx + 1) + " mode") // todo change to viewmodel
