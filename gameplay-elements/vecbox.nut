@@ -1,7 +1,10 @@
 ::vecBox <- class { // extends pcapEntity //* I have ur Valve
     CPcapEntity = null;
+    CBaseEntity = null;
+
     constructor(entity) {
-        CPcapEntity = entity
+        this.CPcapEntity = entLib.FromEntity(entity)
+        this.CBaseEntity = CPcapEntity.CBaseEntity
     }
 
     function SetMode(type) null
@@ -20,6 +23,14 @@
 
     function CreateGhost() null
     function GetGhost() pcapEntity
+
+    function _tostring() {
+        return "pcapEntity: " + this.CBaseEntity + ""
+    }
+
+    function _typeof() {
+        return "pcapEntity"
+    }
 }
 
 
@@ -31,7 +42,7 @@ function vecBox::SetMode(type) {
 
     type.playParticle("vecbox", this.GetOrigin())
 
-    animate.ColorTransition(this, this.GetColor(), type.color, 0.3, {eventName = this.CPcapEntity})
+    animate.ColorTransition(this, this.GetColor(), type.color, 0.3, {eventName = this.CPcapEntity.CBaseEntity})
     this.EmitSound("VecBox.Activate")
 }
 
@@ -40,7 +51,7 @@ function vecBox::DeactivateMode(hardReset = false) {
         return
     
     this.ResetModes(hardReset)
-    animate.ColorTransition(this, this.GetColor(), "255 255 255", 0.5, {eventName = this.CPcapEntity}) // TODO hard code?
+    animate.ColorTransition(this, this.GetColor(), "255 255 255", 0.5, {eventName = this.CPcapEntity.CBaseEntity}) // TODO hard code?
     this.EmitSound("VecBox.Deactivate")
     defaultVecball.playParticle("vecbox", this.GetOrigin())
 }
@@ -135,40 +146,32 @@ function vecBox::GetGhost() {
 
 // DID YOU KNOW THAT CLASS EXTENSION BREAKS THE GAME ON SAVE/LOAD? AND I DIDN'T KNOW! THAT'S WHY I HAD TO USE THIS FUCKING WORKAROUND!!!!
 // More info: https://discord.com/channels/262311619428614144/263051788767199232/1211025106076307569
-function vecBox::ConnectOutput(output, funcName) this.CPcapEntity.ConnectOutput(output, funcName)
-function vecBox::DisconnectOutput(output, funcName) this.CPcapEntity.DisconnectOutput(output, funcName)
-function vecBox::EmitSound(sound_name) this.CPcapEntity.EmitSound(sound_name)
-function vecBox::PrecacheSoundScript(sound_name) this.CPcapEntity.PrecacheSoundScript(sound_name)
-function vecBox::IsSequenceFinished() return this.CPcapEntity.IsSequenceFinished()
-function vecBox::SpawnEntity() this.CPcapEntity.SpawnEntity()
+function vecBox::EmitSound(sound_name) this.CBaseEntity.EmitSound(sound_name)
 
-function vecBox::GetAngles() return this.CPcapEntity.GetAngles()
-function vecBox::GetAngularVelocity() return this.CPcapEntity.GetAngularVelocity()
-function vecBox::GetBoundingMaxs() return this.CPcapEntity.GetBoundingMaxs()
-function vecBox::GetBoundingMins() return this.CPcapEntity.GetBoundingMins()
-function vecBox::GetCenter() return this.CPcapEntity.GetCenter()
-function vecBox::GetClassname() return this.CPcapEntity.GetClassname()
-function vecBox::GetForwardVector() return this.CPcapEntity.GetForwardVector()
-function vecBox::GetHealth() return this.CPcapEntity.GetHealth()
-function vecBox::GetLeftVector() return this.CPcapEntity.GetLeftVector()
-function vecBox::GetMaxHealth() return this.CPcapEntity.GetMaxHealth()
-function vecBox::GetModelKeyValues() return this.CPcapEntity.GetModelKeyValues()
-function vecBox::GetModelName() return this.CPcapEntity.GetModelName()
-function vecBox::GetName() return this.CPcapEntity.GetName()
-function vecBox::GetOrigin() return this.CPcapEntity.GetOrigin()
-function vecBox::GetScriptId() return this.CPcapEntity.GetScriptId()
-function vecBox::GetUpVector() return this.CPcapEntity.GetUpVector()
-function vecBox::GetPartnername() return this.CPcapEntity.GetPartnername()
-function vecBox::GetPartnerInstance() return this.CPcapEntity.GetPartnerInstance()
-function vecBox::ValidateScriptScope() return this.CPcapEntity.ValidateScriptScope()
-function vecBox::EyePosition() return this.CPcapEntity.EyePosition()
+function vecBox::GetAngles() return this.CBaseEntity.GetAngles()
+function vecBox::GetAngularVelocity() return this.CBaseEntity.GetAngularVelocity()
+function vecBox::GetBoundingMaxs() return this.CBaseEntity.GetBoundingMaxs()
+function vecBox::GetBoundingMins() return this.CBaseEntity.GetBoundingMins()
+function vecBox::GetCenter() return this.CBaseEntity.GetCenter()
+function vecBox::GetClassname() return this.CBaseEntity.GetClassname()
+function vecBox::GetForwardVector() return this.CBaseEntity.GetForwardVector()
+function vecBox::GetHealth() return this.CBaseEntity.GetHealth()
+function vecBox::GetLeftVector() return this.CBaseEntity.GetLeftVector()
+function vecBox::GetMaxHealth() return this.CBaseEntity.GetMaxHealth()
+function vecBox::GetModelKeyValues() return this.CBaseEntity.GetModelKeyValues()
+function vecBox::GetModelName() return this.CBaseEntity.GetModelName()
+function vecBox::GetName() return this.CBaseEntity.GetName()
+function vecBox::GetOrigin() return this.CBaseEntity.GetOrigin()
+function vecBox::GetScriptId() return this.CBaseEntity.GetScriptId()
+function vecBox::GetUpVector() return this.CBaseEntity.GetUpVector()
+function vecBox::ValidateScriptScope() return this.CBaseEntity.ValidateScriptScope()
 
-function vecBox::SetAbsOrigin(vector) this.CPcapEntity.SetAbsOrigin(vector)
-function vecBox::SetForwardVector(vector) this.CPcapEntity.SetForwardVector(vector)
-function vecBox::SetHealth(health) this.CPcapEntity.SetHealth(health)
-function vecBox::SetMaxHealth(health) this.CPcapEntity.SetMaxHealth(health)
-function vecBox::SetModel(model_name) this.CPcapEntity.SetModel(model_name)
-function vecBox::SetOrigin(vector) this.CPcapEntity.SetOrigin(vector)
+function vecBox::SetAbsOrigin(vector) this.CBaseEntity.SetAbsOrigin(vector)
+function vecBox::SetForwardVector(vector) this.CBaseEntity.SetForwardVector(vector)
+function vecBox::SetHealth(health) this.CBaseEntity.SetHealth(health)
+function vecBox::SetMaxHealth(health) this.CBaseEntity.SetMaxHealth(health)
+function vecBox::SetModel(model_name) this.CBaseEntity.SetModel(model_name)
+function vecBox::SetOrigin(vector) this.CBaseEntity.SetOrigin(vector)
 
 // pcapEnt func
 function vecBox::Destroy() this.CPcapEntity.Destroy()
