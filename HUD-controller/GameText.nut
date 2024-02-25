@@ -1,6 +1,8 @@
-class ScreenText extends HudInterface {
+class ScreenText {
+    CPcapEntity = null;
+    
     constructor(position, message, holdtime = 10, targetname = "") {
-        this.CBaseEntity = entLib.CreateByClassname("game_text", {
+        this.CPcapEntity = entLib.CreateByClassname("game_text", {
             // Set initial properties for the text display entity
             channel = 2,
             color = "170 170 170",
@@ -15,8 +17,12 @@ class ScreenText extends HudInterface {
             spawnflags = 0,
             message = message,
             targetname = targetname
-        }).CBaseEntity
+        })
     }
+
+    function Enable() null
+    function Disable() null
+    function Update() null
 
     function SetText(message) null // Changes the message of the text display
     function SetChannel(value) null
@@ -32,59 +38,54 @@ class ScreenText extends HudInterface {
 
 // Implementation of 'enable' to display the on-screen text
 function ScreenText::Enable() {
-    EntFireByHandle(this, "Display")
+    EntFireByHandle(this.CPcapEntity, "Display")
 }
 
 // Implementation of 'disable' to hide the on-screen text
 function ScreenText::Disable() {
-    EntFireByHandle(this, "Disable")
+    EntFireByHandle(this.CPcapEntity, "Disable")
 }
 
 function ScreenText::Update() {
-    this.Enable()
+    this.CPcapEntity.Enable()
 }
-
-function ScreenText::Change(message) {
-    this.SetText(message)
-}
-
 
 // TODO comments
 
 // Implementation of 'SetText' to change the message and re-enable the text display
 function ScreenText::SetText(message) {
-    this.SetKeyValue("message", message)
+    this.CPcapEntity.SetKeyValue("message", message)
 }
 
 function ScreenText::SetChannel(channel) {
-    this.SetKeyValue("channel", channel)
+    this.CPcapEntity.SetKeyValue("channel", channel)
 }
 
 function ScreenText::SetColor(color) {
-    this.SetKeyValue("color", color)
+    this.CPcapEntity.SetKeyValue("color", color)
 }
 
 function ScreenText::SetColor2(color) {
-    this.SetKeyValue("color2", color)
+    this.CPcapEntity.SetKeyValue("color2", color)
 }
 
 function ScreenText::SetEffect(idx) {
-    this.SetKeyValue("effect", idx)
+    this.CPcapEntity.SetKeyValue("effect", idx)
 }
 
 function ScreenText::SetFadeIn(value) {
-    this.SetKeyValue("fadein", value)
+    this.CPcapEntity.SetKeyValue("fadein", value)
 }
 
 function ScreenText::SetFadeOut(value) {
-    this.SetKeyValue("fadeout", value)
+    this.CPcapEntity.SetKeyValue("fadeout", value)
 }
 
 function ScreenText::SetHoldTime(time) {
-    this.SetKeyValue("holdtime", time)
+    this.CPcapEntity.SetKeyValue("holdtime", time)
 }
 
 function ScreenText::SetPos(position) {
-    this.SetKeyValue("x", position.x)
-    this.SetKeyValue("y", position.y)
+    this.CPcapEntity.SetKeyValue("x", position.x)
+    this.CPcapEntity.SetKeyValue("y", position.y)
 }
