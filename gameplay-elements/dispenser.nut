@@ -3,7 +3,8 @@ function initDispancer(mode) {
     local dispancer = entLib.FromEntity(caller)
     local prefix = dispancer.GetNamePrefix()
 
-    dispancer.SetColor(ballMode.GetColor())
+    dispancer.SetUserData("veccolor", ballMode.GetColor())
+    entLib.FindByName(prefix + "spotlight").SetColor(ballMode.GetColor())
 
     // Set particles
     local basePoint = entLib.FindByName(prefix + "dispenser_particle")
@@ -28,12 +29,18 @@ function initDispancer(mode) {
         baseFX.SetName(basePoint.GetName())
         coreFX.SetName(basePoint.GetName())
         vecballFX.SetName(vecballPoint.GetName())
+}
 
-        EntFireByHandle(baseFX, "Start")
-        EntFireByHandle(coreFX, "Start")
-        EntFireByHandle(vecballFX, "Start")
-    
-    // ballMode.appendDispancer(dispancer)
+function enableDispancer() {
+    local dispancer = entLib.FromEntity(caller)
+    local color = dispancer.GetUserData("veccolor")
+    if(color == dispancer.GetColor()) return
+    animate.ColorTransition(dispancer, dispancer.GetColor(), color, 0.15)
+}
+
+function disableDispancer() {
+    local dispancer = entLib.FromEntity(caller)
+    animate.ColorTransition(dispancer, dispancer.GetColor(), Vector(30, 30, 30), 0.15)
 }
 
 function touchDispancer(mode) {
