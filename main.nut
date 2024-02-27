@@ -18,26 +18,24 @@ IncludeScript("Fanctronic/gameplay-elements/dispenser")
 IncludeScript("Fanctronic/gameplay-elements/ballshot")
 IncludeScript("Fanctronic/gameplay-elements/fizzler")
 
-
+// Const
 const maxDistance = 3000
 const projectileSpeed = 16.6 // units per frame
 const recursionDepth = 8
 const maxProjectilesOnMap = 10
 const vecgunShootDelay = 0
 
-::traceSettings <- { 
-    ignoreClass = arrayLib.new("info_target", "viewmodel", "weapon_", "info_particle_system",
-        "trigger_", "phys_", "env_", "point_", "vgui_", "physicsclonearea", "func_door", "func_instance_io_proxy"
-    ),
-    priorityClass = arrayLib.new("trigger_gravity"),
-    ErrorCoefficient = 1000,
-    customFilter = function(ent, ballType) {
-        if(ent.GetClassname() != "trigger_multiple") 
-            return false
-        local vecballIdx = projectileModes.search(ballType) + 1
-        return ent.GetHealth() == vecballIdx || ent.GetHealth() == 999
-    },
-}
+::TraceConfig <- TraceSettings.new()
+TraceConfig.SetPriorityClass(arrayLib(["trigger_gravity"]))
+TraceConfig.SetErrorCoefficient(1000)
+TraceConfig.SetCustomFilter(function(ent, ballType) {
+    if(ent.GetClassname() != "trigger_multiple") 
+        return false
+    local vecballIdx = projectileModes.search(ballType) + 1
+    return ent.GetHealth() == vecballIdx || ent.GetHealth() == 999
+})
+
+
 
 ::vecgunOwners <- {}
 

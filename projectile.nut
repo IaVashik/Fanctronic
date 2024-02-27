@@ -66,7 +66,7 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
 
     //? вынести?
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
-        local trace = bboxcast(startPos, endPos, caller, traceSettings, this)
+        local trace = BboxCast(startPos, endPos, caller, TraceConfig , this)
         animationDuration += projectile.moveBetween(startPos, trace.GetHitpos(), animationDuration)
 
         local hitEnt = trace.GetEntityClassname()
@@ -78,7 +78,7 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
         local dirReflection = math.reflectVector(trace.GetDir(), trace.GetImpactNormal())
 
         local newEnd = endPos + dirReflection * maxDistance
-        endPos = bboxcast._TraceEnd(trace.GetHitpos(), newEnd) //
+        endPos = CheapTrace(trace.GetHitpos(), newEnd).GetHitpos()
         startPos = trace.GetHitpos() + trace.GetImpactNormal()
         
         particleEnt.EmitSoundEx("ParticleBall.Impact", animationDuration, eventName)
