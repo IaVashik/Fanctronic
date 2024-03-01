@@ -66,20 +66,28 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
 
     //? вынести?
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
-        local trace = BboxCast(startPos, endPos, caller, TraceConfig , this)
-        animationDuration += projectile.moveBetween(startPos, trace.GetHitpos(), animationDuration)
+        local trace = PortalBboxCast(startPos, endPos, caller, TraceConfig , this)
 
-        local hitEnt = trace.GetEntityClassname()
-        if(recursion == recursionDepth - 1 || hitEnt == "trigger_gravity" || hitEnt == "prop_physics" || hitEnt == "trigger_multiple") {
-            endPos = trace.GetHitpos()
-            break 
+        local breakIt = false
+        local portalTraces = trace.GetAggregatedPortalEntryInfo()
+        foreach(iter, portalTrace in portalTraces) {
+            animationDuration += projectile.moveBetween(portalTrace.GetStartPos(), portalTrace.GetHitpos(), animationDuration)
+
+            local hitEnt = portalTrace.GetEntityClassname()
+            if(hitEnt == "trigger_gravity" || hitEnt == "prop_physics" || hitEnt == "trigger_multiple") {
+                endPos = portalTrace.GetHitpos()
+                breakIt = true
+                break 
+            }
         }
+        if(breakIt || recursion == recursionDepth - 1) break
 
-        local dirReflection = math.reflectVector(trace.GetDir(), trace.GetImpactNormal())
+        local surfaceNormal = trace.GetImpactNormal()
+        local dirReflection = math.reflectVector(trace.GetDir(), surfaceNormal)
 
         local newEnd = endPos + dirReflection * maxDistance
         endPos = CheapTrace(trace.GetHitpos(), newEnd).GetHitpos()
-        startPos = trace.GetHitpos() + trace.GetImpactNormal()
+        startPos = trace.GetHitpos() + surfaceNormal
         
         particleEnt.EmitSoundEx("ParticleBall.Impact", animationDuration, eventName)
     }
