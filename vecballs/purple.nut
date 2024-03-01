@@ -1,11 +1,11 @@
 local purple = vecProjectile("purple", "154 141 233")
-purple.addHandleFunc(function(cargo) : (purple) {
+purple.addHandleFunc(function(cargo) {
     // For toggle-mode:
     if(cargo.GetModeType() == "purple") {
         return cargo.DeactivateMode(true)
     }
 
-    local thisColor = purple.GetColor()
+    local thisColor = this.GetColor()
     local activateColor = cargo.GetColor()
     local eventName = cargo.CBaseEntity
 
@@ -14,7 +14,7 @@ purple.addHandleFunc(function(cargo) : (purple) {
         animate.ColorTransition(cargo, activateColor, thisColor, 1, {eventName = eventName, globalDelay = 1})
     }, 2, 1, eventName)
     
-    cargo.SetMode(purple)
+    cargo.SetMode(this)
     cargo.EnableIgnoreVecBalls()
 })
 

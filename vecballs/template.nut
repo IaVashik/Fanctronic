@@ -1,15 +1,15 @@
 local ball = vecProjectile("ballName", "255 125 125")
 
 // This function will be called when Vecball hits the cargo
-ball.addHandleFunc(function(cargo) : (ball) {
-    // Should we ignore the vecballs (optional, for example: used in purple mode)
+ball.addHandleFunc(function(cargo) {
+    // Should we ignore the vecballs (optional. for example: used in purple mode)
     if(cargo.ShouldIgnoreVecBalls()) {
         return cargo.EmitSound("ParticleBall.Explosion")
     }
     // To turn ignore on - just type: `cargo.EnableIgnoreVecBalls()`, to disable: cargo.ResetModes/DeactivateMode
 
     // For toggle-mode:
-    // if(cargo.GetModeType() == "ballName") {
+    // if(cargo.GetModeType() == "ballName") { // or `== this.GetType()`
     //     return cargo.DeactivateMode()
     // }
 
@@ -20,7 +20,7 @@ ball.addHandleFunc(function(cargo) : (ball) {
     // your logic
     // example: cargo.SetAlpha(100)
 
-    cargo.SetMode(ball)
+    cargo.SetMode(this)
     // Set the need to conduct a HardReset (Clearing effects from all modes)
     // cargo.EnableHardReset()
 })

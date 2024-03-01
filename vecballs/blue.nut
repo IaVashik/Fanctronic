@@ -1,5 +1,5 @@
 local blue = vecProjectile("blue", "135 213 212") // 143 229 226
-blue.addHandleFunc(function(cargo) : (blue) {
+blue.addHandleFunc(function(cargo) {
     if(cargo.ShouldIgnoreVecBalls()) {
         return cargo.EmitSound("ParticleBall.Explosion")
     }
@@ -13,7 +13,7 @@ blue.addHandleFunc(function(cargo) : (blue) {
     }
 
     cargo.DisableGravity()
-    cargo.SetMode(blue)
+    cargo.SetMode(this)
 })
 
 blue.addRemoverFunc(function(cargo) {
