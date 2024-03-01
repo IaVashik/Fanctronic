@@ -97,7 +97,7 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
     //* Основная обработка попадания vecball в куб
     local hitFunc = function() : (endPos, handleHitFunc, particleEnt) {
         local cargo = entLib.FindByModelWithin("models/props/puzzlebox.mdl", endPos, 25)
-        if(!cargo || cargo.IsValid() == false) 
+        if(!cargo || !cargo.IsValid()) 
             return particleEnt.EmitSound("ParticleBall.Explosion")
 
         handleHitFunc(vecBox(cargo))
