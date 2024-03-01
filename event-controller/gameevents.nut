@@ -1,4 +1,4 @@
-dev["customPrint"] <- function(msg) printl("Fanctronic: " + msg)
+::dev["customPrint"] <- function(msg) printl("Fanctronic: " + msg)
 
 // TODO comment
 local noAlternateBalls = GameEvent("vecgun_powered_on")
