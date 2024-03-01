@@ -28,7 +28,7 @@ function vecballHitController() {
         } 
 
         local distance = (projectile.GetOrigin() - cargoOrigin).Length()
-        if(distance <= 50) {
+        if(distance <= 40 && cargo.IsValid()) {
             projectile.vecType.handleHitFunc(vecBox(cargo))
             projectile.Destroy()
             break
@@ -40,14 +40,14 @@ function vecballHitController() {
     }
 
     // If vecball is near the cargo, check the distance every frame. This is necessary to improve accuracy
-    if(runAgain) {
+    if(runAgain && cargo.IsValid()) {
         RunScriptCode.delay(function():(cargo) {vecCheck(cargo)}, FrameTime())
     }
 }
 
 // This function is used to update the cache of existing cargo (vecbox) entities.
 ::updateCargosList <- function() {
-    for(local ent; ent = Entities.FindByModel(ent, "models/props/puzzlebox.mdl");) {
+    for(local ent; ent = entLib.FindByModel("models/props/puzzlebox.mdl", ent);) {
         if(ent in allCargos) continue
         allCargos[ent] <- null
     }
