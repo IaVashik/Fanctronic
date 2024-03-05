@@ -13,7 +13,7 @@ blue.addHandleFunc(function(cargo) {
     }
 
     cargo.DisableGravity()
-    cargo.SetMode(this)
+    cargo.ActivateMode(this)
 })
 
 blue.addRemoverFunc(function(cargo) {

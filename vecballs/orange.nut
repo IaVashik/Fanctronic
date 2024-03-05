@@ -8,7 +8,7 @@ orange.addHandleFunc(function(cargo) {
         cargo.ResetModes(cargo.ShouldHardReset())
     }
 
-    cargo.SetMode(this)
+    cargo.ActivateMode(this)
     cargo.Dissolve()
 })
 

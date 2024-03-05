@@ -20,7 +20,7 @@ ball.addHandleFunc(function(cargo) {
     // your logic
     // example: cargo.SetAlpha(100)
 
-    cargo.SetMode(this)
+    cargo.ActivateMode(this)
     // Set the need to conduct a HardReset (Clearing effects from all modes)
     // cargo.EnableHardReset()
 })

@@ -26,8 +26,8 @@ function vecFizzle(modeIdx = null) : (_playerFizzle, _cubeFizzle) {
     local cargo = vecBox(activator)
 
     if(cargo.GetMode() == projectileModes[modeIdx-1]) {
-        if(cargo.GetModeType() == "purple") // hard code
-            return _cubeFizzle(cargo, true)
+        if(cargo.GetModeType() == "purple") //! hard code
+            return _cubeFizzle(cargo, false)
         _cubeFizzle(cargo)
     }
 }
@@ -39,8 +39,8 @@ function vecFizzleAll() : (_cubeFizzle) {
             return vecgunOwners[activator].resetModes()
 
     local cargo = vecBox(activator)
-    if(cargo.GetModeType() == "purple") // hardcode
-        return
+    if(cargo.GetModeType() == "purple") //! hardcode
+        return cargo.DeactivateMode(false)
 
     _cubeFizzle(cargo)
 }

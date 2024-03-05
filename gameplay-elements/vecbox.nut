@@ -8,8 +8,9 @@
     }
 
     function SetMode(type) null
-    function DeactivateMode() null
-    function ResetModes() null
+    function ActivateMode(type) null
+    function DeactivateMode(hardReset) null
+    function ResetModes(hardReset) null
     function GetMode() vecProjectile
     function GetModeType() string
 
@@ -37,9 +38,11 @@
 
 function vecBox::SetMode(type) {
     this.SetUserData("ActivatedMode", type)
-    // For filters
-    this.SetContext(type.GetType(), 1)
+    this.SetContext(type.GetType(), 1) // For filters
+}
 
+function vecBox::ActivateMode(type) {
+    this.SetMode(type)
     type.playParticle("vecbox", this.GetOrigin())
 
     animate.ColorTransition(this, this.GetColor(), type.color, 0.3, {eventName = this.CPcapEntity.CBaseEntity})
@@ -59,17 +62,17 @@ function vecBox::DeactivateMode(hardReset = false) {
 function vecBox::ResetModes(hardReset = false) {
     local currentMode = this.GetMode()
 
+    //? hard code?
+    this.SetUserData("ActivatedMode", null)
+    this.SetUserData("ShouldHardReset", false)
+    this.SetUserData("ShouldIgnoreVecBalls", false)
+
     foreach(mode in projectileModes) {
         if(mode == currentMode || hardReset) {
             mode.cargoRemoveEffects(this)
             this.SetContext(mode.GetType(), 0)
         }
     }
-
-    // TODO hard code?
-    this.SetUserData("ActivatedMode", null)
-    this.SetUserData("ShouldHardReset", false)
-    this.SetUserData("ShouldIgnoreVecBalls", false)
 }
 
 
