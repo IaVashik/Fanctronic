@@ -5,7 +5,7 @@
 // This function does not use `entLib.FindByModelWithin()` simply because it is too expensive to check every entity every 8 frames, so all existing vecboxes are "cached" in allCargoes for the sake of optimization.
 // Could this function have been avoided? Yes, it would have been possible to make vecball's flight dynamic, but that would have been expensive as it would have required checking every entity every frame again.
 function vecballHitController() {
-    EntFireByHandle(self, "RunScriptCode", "vecballHitController()", FrameTime() * 8)
+    EntFireByHandle(self, "RunScriptCode", "vecballHitController()", FrameTime() * 8) // todo xd
     if(projectileCount.len() == 0) return 
 
     foreach(cargo, _ in allCargos) {

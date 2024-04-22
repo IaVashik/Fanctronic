@@ -26,7 +26,7 @@ const recursionDepth = 8
 const maxProjectilesOnMap = 10
 const vecgunShootDelay = 0
 
-::TraceConfig <- TraceSettings.new() // TODO comment
+::TraceConfig <- TracePlus.Settings.new()
 TraceConfig.SetPriorityClasses(arrayLib(["trigger_gravity"]))
 TraceConfig.SetIgnoredModels(arrayLib(["portal_emitter"]))
 TraceConfig.SetErrorTolerance(1000)
@@ -38,10 +38,10 @@ TraceConfig.SetCollisionFilter(function(ent, ballType) {
 })
 
 
-
+// TODO COMMENT
 ::vecgunOwners <- {}
 
-function giveVecGun(player) {
+function giveVecGun(player) { // todo
     if(player in vecgunOwners) 
         return dev.warning(player + " already has vecgun.")
     
@@ -67,5 +67,4 @@ for(local player; player = Entities.FindByClassname(player, "player");) {
 
 // Sound Precache
 IncludeScript("Fanctronic/precache")
-SoundPrecache()
 SendToConsole("sv_alternateticks 0")

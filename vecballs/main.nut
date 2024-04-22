@@ -9,5 +9,5 @@ IncludeScript("fanctronic/vecballs/gray")
 
 printl("Available Vecballs:")
 foreach(idx, ball in projectileModes){
-    fprint("► {} [{}]", ball.GetType(), idx + 1)
+    dev.fprint("► {} [{}]", ball.GetType(), idx + 1)
 }

@@ -1,6 +1,5 @@
 class VectronicGun {
     owner = null;
-    ownerEx = null;
 
     currentMode = null;
     availablesModes = null;
@@ -16,14 +15,13 @@ class VectronicGun {
         local vecballCount = projectileModes.len()
 
         this.availablesModes = array(vecballCount, false)
-        this.activeProjectiles = arrayLib.new()
+        this.activeProjectiles = List()
         
-        this.owner = player;
-        this.ownerEx = entLib.FromEntity(player)
+        this.owner = entLib.FromEntity(player);
 
-        this.usedDispancer = arrayLib.new()
+        this.usedDispancer = List()
         for(local i = 0; i < vecballCount; i++) {
-            this.usedDispancer.append(arrayLib.new())
+            this.usedDispancer.append(List())
         }
 
         EventListener.Notify("vecgun_powered_on", player)
@@ -45,12 +43,13 @@ function VectronicGun::Shoot() {
     if(Time() < this.lastShoot + vecgunShootDelay)
         return EventListener.Notify("vecgun_recharge")
 
-    local start = this.ownerEx.EyePosition() 
-    local end = start + this.ownerEx.EyeForwardVector() * maxDistance
+    local start = this.owner.EyePosition() 
+    local end = start + this.owner.EyeForwardVector() * maxDistance
     local projectile = this.GetBall().Shoot(start, end, this.owner)
 
     this.activeProjectiles.append(projectile)
     this.lastShoot = Time()
+
     EventListener.Notify("vecgun_projectile_launched", this.currentMode)
 }
 
@@ -83,7 +82,7 @@ function VectronicGun::deactivateMode(idx) {
     EventListener.Notify("vecgun_mode_deactivated", idx)
     
     local type = projectileModes[idx].GetType()
-    for(local idx = 0; idx < this.activeProjectiles.len(); idx++) { // Oh no, junk code :<
+    for(local idx = 0; idx < this.activeProjectiles.len(); idx++) { // TODO Oh no, junk code :<
         local ball = this.activeProjectiles[idx]
         if(ball.IsValid() == false) {
             this.activeProjectiles.remove(idx)
@@ -116,7 +115,7 @@ function VectronicGun::resetModes() {
 
     this.currentMode = null
 
-    foreach(idx, _ in this.availablesModes){ // TODO make to for
+    for(local idx; idx < this.availablesModes; idx++) {
         availablesModes[idx] = false
     }
 

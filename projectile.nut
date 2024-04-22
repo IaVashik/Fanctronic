@@ -11,9 +11,9 @@ class vecProjectile {
         this.type = type
         this.handleHitFunc = handleFunc
 
-        this.particleMaker = entLib.FindByName("@" + type + "-projectile-spawn")
+        this.particleMaker = entLib.FindByName(dev.format("@{}-projectile-spawn", type)) 
 
-        entLib.FindByName("@" + type + "-colorPoint").SetOrigin(StrToVec(color))
+        entLib.FindByName(dev.format("@{}-colorPoint", type)).SetOrigin(StrToVec(color))
     }
 
     function addHandleFunc(func) null
@@ -66,7 +66,7 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
 
     //? вынести?
     for(local recursion = 0; recursion < recursionDepth; recursion++) {
-        local trace = PortalBboxCast(startPos, endPos, caller, TraceConfig , this)
+        local trace = TracePlus.PortalBbox(startPos, endPos, caller, TraceConfig , this)
 
         local breakIt = false
         local portalTraces = trace.GetAggregatedPortalEntryInfo()
@@ -83,10 +83,10 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
         if(breakIt || recursion == recursionDepth - 1) break
 
         local surfaceNormal = trace.GetImpactNormal()
-        local dirReflection = math.reflectVector(trace.GetDir(), surfaceNormal)
+        local dirReflection = math.vector.reflect(trace.GetDir(), surfaceNormal)
 
         local newEnd = endPos + dirReflection * maxDistance
-        endPos = CheapTrace(trace.GetHitpos(), newEnd).GetHitpos()
+        endPos = TracePlus.Cheap(trace.GetHitpos(), newEnd).GetHitpos()
         startPos = trace.GetHitpos() + surfaceNormal
         
         particleEnt.EmitSoundEx("ParticleBall.Impact", animationDuration, eventName)
@@ -102,13 +102,13 @@ function vecProjectile::Shoot(startPos, endPos, caller) {
 
         handleHitFunc(vecBox(cargo))
     }
-    CreateScheduleEvent(eventName, hitFunc, animationDuration)
+    ScheduleEvent.Add(eventName, hitFunc, animationDuration)
 
     return projectile
 }
 
 function vecProjectile::playParticle(particleName, originPos) {
-    local particle = entLib.FindByName("@" + this.type + "-" + particleName)
+    local particle = entLib.FindByName(dev.format("@{}-{}", this.type, particleName)) 
 
     particle.SetOrigin(originPos)
     EntFireByHandle(particle, "Stop")
@@ -118,7 +118,7 @@ function vecProjectile::playParticle(particleName, originPos) {
 }
 
 function vecProjectile::_createProjectileParticle() {
-    local prefix = "@" + this.type + "-"
+    local prefix = dev.format("@{}-", this.type)
 
     entLib.FindByName(prefix + "projectile-spawn").SpawnEntity()
     local particle = entLib.FindByName(prefix + "projectile")
@@ -131,7 +131,7 @@ function vecProjectile::_createProjectileParticle() {
 
 
 // Storage of all launched projectile
-::projectileCount <- []
+::projectileCount <- List()
 
 // The object of the Projectile itself :>
 ::launchedProjectile <- class {
@@ -147,7 +147,7 @@ function vecProjectile::_createProjectileParticle() {
 
         // An optional functionality, created purely for the sake of optimization
         if(::projectileCount.len() > maxProjectilesOnMap) {
-            local oldestProjectile = ::projectileCount[0]
+            local oldestProjectile = ::projectileCount.first()
             if(oldestProjectile.IsValid()) 
                 oldestProjectile.Destroy()
             ::projectileCount.remove(0)
@@ -157,7 +157,7 @@ function vecProjectile::_createProjectileParticle() {
 
     function Destroy() {
         if(this.IsValid() == false) return
-        cancelScheduledEvent(this.eventName)
+        ScheduleEvent.Cancel(this.eventName)
         this.particleEnt.Destroy()
     }
 
@@ -167,7 +167,7 @@ function vecProjectile::_createProjectileParticle() {
     }
 
     function IsValid() {
-        return eventIsValid(this.eventName) && this.particleEnt.IsValid()
+        return ScheduleEvent.IsValid(this.eventName) && this.particleEnt.IsValid()
     }
 
     function moveBetween(startPos, endPos, delay = 0) {

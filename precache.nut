@@ -22,7 +22,4 @@ local soundScripts = [
     "Vectronic.Chamberlock", "Vectronic.OpenSpace", "Vectronic.TightSpace", "vectronic.Cleanser", "Vectronic.BTS", "Vectronic.Goo"
 ]
 
-function SoundPrecache() : (soundScripts) {
-    Precache(soundScripts)
-}
-// Precache("ParticleBall.AmbientLoop")
+macros.Precache(soundScripts)

@@ -11,10 +11,11 @@ purple.addHandleFunc(function(cargo) {
     local activateColor = cargo.GetColor()
     local eventName = cargo.CBaseEntity
 
-    RunScriptCode.setInterval(function():(cargo, thisColor, activateColor, eventName) {
+    local action = function(cargo, thisColor, activateColor, eventName) {
         animate.ColorTransition(cargo, thisColor, activateColor, 1, {eventName = eventName})
         animate.ColorTransition(cargo, activateColor, thisColor, 1, {eventName = eventName, globalDelay = 1})
-    }, 2, 1, eventName)
+    }
+    ScheduleEvent.AddInterval(eventName, action, 2, 1, [cargo, thisColor, activateColor, eventName])
     
     cargo.ActivateMode(this)
     cargo.EnableIgnoreVecBalls()
@@ -22,7 +23,7 @@ purple.addHandleFunc(function(cargo) {
 
 purple.addRemoverFunc(function(cargo) {
     local eventName = cargo.CBaseEntity
-    if(eventIsValid(eventName)) cancelScheduledEvent(eventName)
+    if(eventIsValid(eventName)) ScheduleEvent.Cancel(eventName)
     
     local previousMode = cargo.GetUserData("previousMode")
     if(previousMode)
